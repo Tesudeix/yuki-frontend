@@ -1,15 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { apiRequest, getApiBase, isSuccess } from "../lib/api-client";
 
 type AuthenticatedUser = {
   phone: string;
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  role?: string | null;
+  age?: number | null;
+  lastVerifiedAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
   [key: string]: unknown;
 };
 
 type MessageState = { tone: "info" | "success" | "error"; text: string } | null;
+
+type TwilioStatusSnapshot = {
+  ok: boolean;
+  service?: {
+    friendlyName?: string;
+    sid?: string;
+    codeLength?: number;
+    customCodeEnabled?: boolean;
+  };
+  error?: { message?: string; code?: number } | string;
+  checkedAt?: number;
+};
+
+type MongoStatusSnapshot = {
+  connected: boolean;
+  status: string;
+  database?: string | null;
+};
 
 const PHONE_REGEX = /^\+\d{9,15}$/;
 
@@ -20,81 +46,139 @@ export default function Home() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [message, setMessage] = useState<MessageState>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "verifying" | "fetching">("idle");
-  const [serviceStatus, setServiceStatus] = useState<"checking" | "ready" | "unavailable">("checking");
-  const [serviceDetails, setServiceDetails] = useState<{ friendlyName?: string } | null>(null);
-  const [serviceError, setServiceError] = useState<string | null>(null);
+  const [statusState, setStatusState] = useState<"checking" | "ready" | "degraded" | "unavailable">("checking");
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [twilioStatus, setTwilioStatus] = useState<TwilioStatusSnapshot | null>(null);
+  const [mongoStatus, setMongoStatus] = useState<MongoStatusSnapshot | null>(null);
   const [apiBase, setApiBase] = useState("");
 
   useEffect(() => {
     setApiBase(getApiBase());
   }, []);
 
-  const resolveError = (
-    payload: { error?: string; message?: string; details?: unknown },
-    fallback: string,
-  ) => {
-    if (payload.error) {
-      return payload.error;
-    }
-    if (payload.message) {
-      return payload.message;
-    }
-    if (typeof payload.details === "string") {
-      return payload.details;
-    }
-    if (payload.details && typeof payload.details === "object" && "message" in payload.details) {
-      const maybeMessage = (payload.details as { message?: unknown }).message;
-      if (typeof maybeMessage === "string") {
-        return maybeMessage;
+  const resolveError = useCallback(
+    (payload: { error?: string; message?: string; details?: unknown }, fallback: string) => {
+      if (payload.error) {
+        return payload.error;
       }
-    }
-    return fallback;
-  };
+      if (payload.message) {
+        return payload.message;
+      }
+      if (typeof payload.details === "string") {
+        return payload.details;
+      }
+      if (payload.details && typeof payload.details === "object" && "message" in payload.details) {
+        const maybeMessage = (payload.details as { message?: unknown }).message;
+        if (typeof maybeMessage === "string") {
+          return maybeMessage;
+        }
+      }
+      return fallback;
+    },
+    [],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchStatus = async () => {
-      const response = await apiRequest<{ service?: { friendlyName?: string } }>("/users/otp/status", {
+  const refreshSystemStatus = useCallback(async () => {
+    const response = await apiRequest<{ twilio?: TwilioStatusSnapshot; mongo?: MongoStatusSnapshot }>(
+      "/users/status",
+      {
         method: "GET",
-      });
+      },
+    );
 
-      if (cancelled) {
+    if (isSuccess(response)) {
+      const twilioSnapshot = response.twilio ?? null;
+      const mongoSnapshot = response.mongo ?? null;
+
+      setTwilioStatus(twilioSnapshot);
+      setMongoStatus(mongoSnapshot);
+
+      const twilioOk = twilioSnapshot?.ok ?? false;
+      const mongoOk = mongoSnapshot?.connected ?? false;
+
+      const twilioErrorMessage = !twilioOk
+        ? twilioSnapshot
+          ? typeof twilioSnapshot.error === "string"
+            ? twilioSnapshot.error
+            : twilioSnapshot.error?.message || "Twilio Verify үйлчилгээ бэлэн биш байна."
+          : "Twilio Verify мэдээлэл олдсонгүй."
+        : null;
+
+      const mongoErrorMessage = !mongoOk
+        ? mongoSnapshot
+          ? `MongoDB (${mongoSnapshot.status}) холболт идэвхгүй байна.`
+          : "MongoDB холболтын мэдээлэл олдсонгүй."
+        : null;
+
+      if (twilioOk && mongoOk) {
+        setStatusState("ready");
+        setStatusError(null);
         return;
       }
 
-      if (isSuccess(response)) {
-        setServiceDetails(response.service ?? null);
-        setServiceError(null);
-        setServiceStatus("ready");
-      } else {
-        setServiceDetails(null);
-        setServiceError(response.error ?? null);
-        setServiceStatus("unavailable");
+      if (!twilioOk && !mongoOk) {
+        setStatusState("unavailable");
+        setStatusError(
+          `${twilioErrorMessage ?? "Twilio Verify үйлчилгээ бэлэн биш байна."} / ${
+            mongoErrorMessage ?? "MongoDB холболт идэвхгүй байна."
+          }`,
+        );
+        return;
       }
-    };
 
-    fetchStatus();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      setStatusState("degraded");
+      setStatusError(twilioErrorMessage ?? mongoErrorMessage ?? "Үйлчилгээний бэлэн байдлыг шалгана уу.");
+    } else {
+      const errorMessage = resolveError(response, "Системийн байдлыг шалгахад алдаа гарлаа.");
+      setStatusState("unavailable");
+      setStatusError(errorMessage);
+      setTwilioStatus(null);
+      setMongoStatus(null);
+    }
+  }, [resolveError]);
 
   useEffect(() => {
-    if (serviceStatus === "unavailable") {
-      setMessage((current) =>
-        current ?? {
-          tone: "error",
-          text: serviceError
-            ? `Twilio Verify үйлчилгээ бэлэн биш байна: ${serviceError}`
-            : "Twilio Verify үйлчилгээ бэлэн биш байна.",
-        },
-      );
-    }
-  }, [serviceStatus, serviceError]);
+    refreshSystemStatus();
+  }, [refreshSystemStatus]);
 
-  const serviceReady = serviceStatus === "ready";
+  useEffect(() => {
+    if ((statusState === "degraded" || statusState === "unavailable") && statusError) {
+      setMessage((current) => current ?? { tone: "error", text: statusError });
+    }
+  }, [statusState, statusError]);
+
+  const serviceReady = (twilioStatus?.ok ?? false) && (mongoStatus?.connected ?? false);
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) {
+      return null;
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toLocaleString();
+  };
+
+  const fetchProfileWithToken = useCallback(
+    async (authToken: string) => {
+      const response = await apiRequest<{ user: AuthenticatedUser }>("/users/profile", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (isSuccess(response)) {
+        setUser(response.user);
+        return { ok: true as const };
+      }
+
+      return {
+        ok: false as const,
+        error: resolveError(response, "Профайл татаж чадсангүй."),
+      };
+    },
+    [resolveError],
+  );
 
   const sendOtp = async () => {
     const trimmed = phone.trim();
@@ -104,14 +188,15 @@ export default function Home() {
     }
 
     if (!serviceReady) {
-      setMessage({ tone: "error", text: "Twilio Verify үйлчилгээ бэлэн болмогц дахин оролдоно уу." });
+      setMessage({ tone: "error", text: "Twilio болон MongoDB үйлчилгээ бэлэн болмогц дахин оролдоно уу." });
+      await refreshSystemStatus();
       return;
     }
 
     setStatus("sending");
     setMessage(null);
 
-    const response = await apiRequest<{}>("/users/otp/send", {
+    const response = await apiRequest<Record<string, never>>("/users/otp/send", {
       method: "POST",
       body: JSON.stringify({ phone: trimmed }),
     });
@@ -141,7 +226,8 @@ export default function Home() {
     }
 
     if (!serviceReady) {
-      setMessage({ tone: "error", text: "Twilio Verify үйлчилгээ бэлэн болмогц дахин оролдоно уу." });
+      setMessage({ tone: "error", text: "Twilio болон MongoDB үйлчилгээ бэлэн болмогц дахин оролдоно уу." });
+      await refreshSystemStatus();
       return;
     }
 
@@ -154,9 +240,32 @@ export default function Home() {
     });
 
     if (isSuccess(response)) {
-      setToken(response.token);
-      setUser(response.user);
-      setMessage({ tone: "success", text: "Амжилттай баталгаажлаа." });
+      const newToken = response.token;
+      setToken(newToken);
+
+      if (response.user) {
+        setUser(response.user);
+      }
+
+      let profileResult: { ok: boolean; error?: string } | null = null;
+
+      if (newToken) {
+        profileResult = await fetchProfileWithToken(newToken);
+      }
+
+      if (profileResult && !profileResult.ok) {
+        setMessage({
+          tone: "error",
+          text: `OTP баталгаажсан ч MongoDB-с уншихад алдаа гарлаа: ${profileResult.error}`,
+        });
+      } else {
+        setMessage({
+          tone: "success",
+          text: "Амжилттай баталгаажлаа. Хэрэглэгч MongoDB-д хадгалагдсан.",
+        });
+      }
+
+      await refreshSystemStatus();
     } else {
       setMessage({
         tone: "error",
@@ -175,21 +284,12 @@ export default function Home() {
 
     setStatus("fetching");
 
-    const response = await apiRequest<{ user: AuthenticatedUser }>("/users/profile", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const result = await fetchProfileWithToken(token);
 
-    if (isSuccess(response)) {
-      setUser(response.user);
+    if (result.ok) {
       setMessage({ tone: "success", text: "Профайл шинэчлэгдлээ." });
     } else {
-      setMessage({
-        tone: "error",
-        text: resolveError(response, "Профайл татаж чадсангүй."),
-      });
+      setMessage({ tone: "error", text: result.error });
     }
 
     setStatus("idle");
@@ -198,6 +298,42 @@ export default function Home() {
   const sendDisabled = status === "sending" || status === "verifying" || !serviceReady;
   const verifyDisabled = status === "sending" || status === "verifying" || !serviceReady;
   const disableFetch = status === "fetching";
+
+  const twilioLineClass = twilioStatus
+    ? twilioStatus.ok
+      ? "text-green-700"
+      : "text-red-700"
+    : statusState === "checking"
+      ? "text-blue-700"
+      : "text-red-700";
+
+  const mongoLineClass = mongoStatus
+    ? mongoStatus.connected
+      ? "text-green-700"
+      : "text-red-700"
+    : statusState === "checking"
+      ? "text-blue-700"
+      : "text-red-700";
+
+  const twilioLineText = twilioStatus
+    ? twilioStatus.ok
+      ? twilioStatus.service?.friendlyName || "Бэлэн"
+      : typeof twilioStatus.error === "string"
+        ? twilioStatus.error
+        : twilioStatus.error?.message || "Идэвхгүй"
+    : statusState === "checking"
+      ? "Шалгаж байна..."
+      : "Мэдээлэл алга";
+
+  const mongoLineText = mongoStatus
+    ? mongoStatus.connected
+      ? `Холбогдсон${mongoStatus.database ? ` (${mongoStatus.database})` : ""}`
+      : `Идэвхгүй (${mongoStatus.status})`
+    : statusState === "checking"
+      ? "Шалгаж байна..."
+      : "Мэдээлэл алга";
+
+  const lastVerifiedLabel = formatDateTime(user?.lastVerifiedAt ?? null);
 
   return (
       <main className="flex min-h-screen flex-col gap-4 p-10">
@@ -208,21 +344,8 @@ export default function Home() {
             API үндэс:
             <span className="ml-1 font-medium text-gray-800">{apiBase || "Тохируулаагүй"}</span>
           </span>
-          <span
-              className={
-                serviceStatus === "ready"
-                  ? "text-green-700"
-                  : serviceStatus === "checking"
-                      ? "text-blue-700"
-                      : "text-red-700"
-              }
-          >
-            Twilio Verify: {serviceStatus === "ready"
-              ? serviceDetails?.friendlyName || "Бэлэн"
-              : serviceStatus === "checking"
-                  ? "Шалгаж байна..."
-                  : serviceError || "Идэвхгүй"}
-          </span>
+          <span className={twilioLineClass}>Twilio Verify: {twilioLineText}</span>
+          <span className={mongoLineClass}>MongoDB: {mongoLineText}</span>
         </section>
 
         {message && (
@@ -287,6 +410,9 @@ export default function Home() {
               <div className="rounded border border-gray-200 bg-slate-50 px-3 py-2">
                 <p className="text-sm text-gray-600">Нэвтэрсэн хэрэглэгч</p>
                 <p className="font-medium">{user?.phone ?? phone}</p>
+                {lastVerifiedLabel && (
+                    <p className="text-xs text-gray-500">Сүүлд баталгаажсан: {lastVerifiedLabel}</p>
+                )}
               </div>
 
               <button
