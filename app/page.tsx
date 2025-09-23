@@ -1,103 +1,303 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { apiRequest, getApiBase, isSuccess } from "../lib/api-client";
+
+type AuthenticatedUser = {
+  phone: string;
+  [key: string]: unknown;
+};
+
+type MessageState = { tone: "info" | "success" | "error"; text: string } | null;
+
+const PHONE_REGEX = /^\+\d{9,15}$/;
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthenticatedUser | null>(null);
+  const [message, setMessage] = useState<MessageState>(null);
+  const [status, setStatus] = useState<"idle" | "sending" | "verifying" | "fetching">("idle");
+  const [serviceStatus, setServiceStatus] = useState<"checking" | "ready" | "unavailable">("checking");
+  const [serviceDetails, setServiceDetails] = useState<{ friendlyName?: string } | null>(null);
+  const [serviceError, setServiceError] = useState<string | null>(null);
+  const [apiBase, setApiBase] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    setApiBase(getApiBase());
+  }, []);
+
+  const resolveError = (
+    payload: { error?: string; message?: string; details?: unknown },
+    fallback: string,
+  ) => {
+    if (payload.error) {
+      return payload.error;
+    }
+    if (payload.message) {
+      return payload.message;
+    }
+    if (typeof payload.details === "string") {
+      return payload.details;
+    }
+    if (payload.details && typeof payload.details === "object" && "message" in payload.details) {
+      const maybeMessage = (payload.details as { message?: unknown }).message;
+      if (typeof maybeMessage === "string") {
+        return maybeMessage;
+      }
+    }
+    return fallback;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchStatus = async () => {
+      const response = await apiRequest<{ service?: { friendlyName?: string } }>("/users/otp/status", {
+        method: "GET",
+      });
+
+      if (cancelled) {
+        return;
+      }
+
+      if (isSuccess(response)) {
+        setServiceDetails(response.service ?? null);
+        setServiceError(null);
+        setServiceStatus("ready");
+      } else {
+        setServiceDetails(null);
+        setServiceError(response.error ?? null);
+        setServiceStatus("unavailable");
+      }
+    };
+
+    fetchStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (serviceStatus === "unavailable") {
+      setMessage((current) =>
+        current ?? {
+          tone: "error",
+          text: serviceError
+            ? `Twilio Verify үйлчилгээ бэлэн биш байна: ${serviceError}`
+            : "Twilio Verify үйлчилгээ бэлэн биш байна.",
+        },
+      );
+    }
+  }, [serviceStatus, serviceError]);
+
+  const serviceReady = serviceStatus === "ready";
+
+  const sendOtp = async () => {
+    const trimmed = phone.trim();
+    if (!PHONE_REGEX.test(trimmed)) {
+      setMessage({ tone: "error", text: "Утасны дугаарыг + тэмдэгтэйгээр (E.164 формат) оруулна уу." });
+      return;
+    }
+
+    if (!serviceReady) {
+      setMessage({ tone: "error", text: "Twilio Verify үйлчилгээ бэлэн болмогц дахин оролдоно уу." });
+      return;
+    }
+
+    setStatus("sending");
+    setMessage(null);
+
+    const response = await apiRequest<{}>("/users/otp/send", {
+      method: "POST",
+      body: JSON.stringify({ phone: trimmed }),
+    });
+
+    if (isSuccess(response)) {
+      setMessage({ tone: "success", text: "OTP амжилттай илгээгдлээ." });
+      setCode("");
+    } else {
+      setMessage({
+        tone: "error",
+        text: resolveError(response, "OTP илгээхэд алдаа гарлаа."),
+      });
+    }
+
+    setStatus("idle");
+  };
+
+  const verifyOtp = async () => {
+    const trimmed = phone.trim();
+    if (!PHONE_REGEX.test(trimmed)) {
+      setMessage({ tone: "error", text: "Утасны дугаарыг дахин шалгаарай." });
+      return;
+    }
+    if (!code.trim()) {
+      setMessage({ tone: "error", text: "Ирсэн OTP кодоо оруулна уу." });
+      return;
+    }
+
+    if (!serviceReady) {
+      setMessage({ tone: "error", text: "Twilio Verify үйлчилгээ бэлэн болмогц дахин оролдоно уу." });
+      return;
+    }
+
+    setStatus("verifying");
+    setMessage(null);
+
+    const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/users/otp/verify", {
+      method: "POST",
+      body: JSON.stringify({ phone: trimmed, code: code.trim() }),
+    });
+
+    if (isSuccess(response)) {
+      setToken(response.token);
+      setUser(response.user);
+      setMessage({ tone: "success", text: "Амжилттай баталгаажлаа." });
+    } else {
+      setMessage({
+        tone: "error",
+        text: resolveError(response, "OTP баталгаажуулахад алдаа гарлаа."),
+      });
+    }
+
+    setStatus("idle");
+  };
+
+  const fetchProfile = async () => {
+    if (!token) {
+      setMessage({ tone: "error", text: "Token байхгүй байна." });
+      return;
+    }
+
+    setStatus("fetching");
+
+    const response = await apiRequest<{ user: AuthenticatedUser }>("/users/profile", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (isSuccess(response)) {
+      setUser(response.user);
+      setMessage({ tone: "success", text: "Профайл шинэчлэгдлээ." });
+    } else {
+      setMessage({
+        tone: "error",
+        text: resolveError(response, "Профайл татаж чадсангүй."),
+      });
+    }
+
+    setStatus("idle");
+  };
+
+  const sendDisabled = status === "sending" || status === "verifying" || !serviceReady;
+  const verifyDisabled = status === "sending" || status === "verifying" || !serviceReady;
+  const disableFetch = status === "fetching";
+
+  return (
+      <main className="flex min-h-screen flex-col gap-4 p-10">
+        <h1 className="text-3xl font-bold">Yuki + Twilio</h1>
+
+        <section className="flex flex-col gap-1 text-sm text-gray-600">
+          <span>
+            API үндэс:
+            <span className="ml-1 font-medium text-gray-800">{apiBase || "Тохируулаагүй"}</span>
+          </span>
+          <span
+              className={
+                serviceStatus === "ready"
+                  ? "text-green-700"
+                  : serviceStatus === "checking"
+                      ? "text-blue-700"
+                      : "text-red-700"
+              }
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+            Twilio Verify: {serviceStatus === "ready"
+              ? serviceDetails?.friendlyName || "Бэлэн"
+              : serviceStatus === "checking"
+                  ? "Шалгаж байна..."
+                  : serviceError || "Идэвхгүй"}
+          </span>
+        </section>
+
+        {message && (
+            <div
+                className={
+                  message.tone === "success"
+                      ? "rounded border border-green-300 bg-green-50 px-3 py-2 text-green-800"
+                      : message.tone === "error"
+                          ? "rounded border border-red-300 bg-red-50 px-3 py-2 text-red-700"
+                          : "rounded border border-blue-300 bg-blue-50 px-3 py-2 text-blue-700"
+                }
+            >
+              {message.text}
+            </div>
+        )}
+
+        {!token ? (
+            <section className="flex flex-col gap-3">
+              <label className="flex flex-col gap-1">
+                <span className="text-sm text-gray-600">Утасны дугаар</span>
+                <input
+                    autoComplete="tel"
+                    className="border px-3 py-2 rounded"
+                    placeholder="+97699112233"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    disabled={status === "verifying"}
+                />
+              </label>
+
+              <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-60"
+                  onClick={sendOtp}
+                  disabled={sendDisabled}
+              >
+                {status === "sending" ? "Илгээж байна..." : "OTP илгээх"}
+              </button>
+
+              <label className="flex flex-col gap-1">
+                <span className="text-sm text-gray-600">OTP код</span>
+                <input
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    className="border px-3 py-2 rounded"
+                    placeholder="123456"
+                    value={code}
+                    onChange={(event) => setCode(event.target.value)}
+                    disabled={status === "sending"}
+                />
+              </label>
+
+              <button
+                  className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-60"
+                  onClick={verifyOtp}
+                  disabled={verifyDisabled}
+              >
+                {status === "verifying" ? "Баталгаажуулж байна..." : "OTP баталгаажуулах"}
+              </button>
+            </section>
+        ) : (
+            <section className="flex flex-col gap-3">
+              <div className="rounded border border-gray-200 bg-slate-50 px-3 py-2">
+                <p className="text-sm text-gray-600">Нэвтэрсэн хэрэглэгч</p>
+                <p className="font-medium">{user?.phone ?? phone}</p>
+              </div>
+
+              <button
+                  className="bg-gray-700 text-white px-4 py-2 rounded disabled:opacity-60"
+                  onClick={fetchProfile}
+                  disabled={disableFetch}
+              >
+                {status === "fetching" ? "Шинэчилж байна..." : "Профайл шинэчлэх"}
+              </button>
+            </section>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
   );
 }
