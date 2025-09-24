@@ -19,6 +19,7 @@ import {
   USER_STORAGE_KEY,
 } from "../lib/constants";
 import { resolveErrorMessage } from "../lib/error-utils";
+import { normalizePhoneForE164 } from "../lib/phone";
 import { AdminProfile, AuthenticatedUser } from "../lib/types";
 
 type ActionResult<T = void> =
@@ -154,7 +155,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = useCallback(
     async ({ phone, password, name }: { phone: string; password: string; name?: string }): Promise<ActionResult<AuthenticatedUser>> => {
-      if (!PHONE_REGEX.test(phone)) {
+      const normalizedPhone = normalizePhoneForE164(phone);
+      if (!normalizedPhone || !PHONE_REGEX.test(normalizedPhone)) {
         return { ok: false, error: "Утасны дугаарыг зөв оруулна уу." };
       }
 
@@ -167,7 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/users/register", {
         method: "POST",
-        body: JSON.stringify({ phone, password, name }),
+        body: JSON.stringify({ phone: normalizedPhone, password, name }),
       });
 
       if (isSuccess(response)) {
@@ -185,7 +187,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(
     async ({ phone, password }: { phone: string; password: string }): Promise<ActionResult<AuthenticatedUser>> => {
-      if (!PHONE_REGEX.test(phone)) {
+      const normalizedPhone = normalizePhoneForE164(phone);
+      if (!normalizedPhone || !PHONE_REGEX.test(normalizedPhone)) {
         return { ok: false, error: "Утасны дугаарыг дахин шалгаарай." };
       }
 
@@ -198,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/users/login", {
         method: "POST",
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ phone: normalizedPhone, password }),
       });
 
       if (isSuccess(response)) {
@@ -246,9 +249,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const adminLogin = useCallback(
     async ({ phone, password }: { phone: string; password: string }): Promise<ActionResult<AdminProfile>> => {
+      const normalizedPhone = normalizePhoneForE164(phone);
+      if (!normalizedPhone) {
+        return { ok: false, error: "Утасны дугаараа шалгана уу." };
+      }
+
       const response = await apiRequest<{ token: string; admin: AdminProfile }>("/admin/login", {
         method: "POST",
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ phone: normalizedPhone, password }),
       });
 
       if (isSuccess(response)) {

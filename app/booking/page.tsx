@@ -316,8 +316,7 @@ const BookingPage = () => {
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-5 py-12">
         <header className="flex flex-col gap-2">
           <span className="text-[11px] uppercase tracking-[0.38em] text-neutral-600">Yuki Studio</span>
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-50">Цаг товлох урсгал</h1>
-          <p className="text-sm text-neutral-500">Салон → артист → цаг. Бусад зүйл үгүй.</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-neutral-50">Цаг захиалах</h1>
         </header>
 
         <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
@@ -325,10 +324,6 @@ const BookingPage = () => {
             <div className="space-y-2">
               <span className="text-[11px] uppercase tracking-[0.3em] text-neutral-500">Хэрэглэгч</span>
               <p className="text-lg font-semibold text-neutral-100">{user?.phone ?? "Тохируулаагүй"}</p>
-              <div className="space-y-1 text-xs text-neutral-500">
-                <p>Сүүлд нэвтэрсэн: {lastLoginAt ?? "—"}</p>
-                <p>Утас баталгаажсан: {lastVerifiedAt ?? "—"}</p>
-              </div>
               {nextBooking && (
                 <p className="text-xs text-neutral-400">
                   Сүүлд захиалсан: {nextBooking.location.name} • {formatDisplayDate(nextBooking.date)} • {formatTimeLabel(nextBooking.time)}
@@ -355,29 +350,67 @@ const BookingPage = () => {
           </div>
         </section>
 
-        <nav className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.28em] text-neutral-500">
+        <nav className="flex items-center justify-between w-full">
           {bookingSteps.map((entry, index) => {
             const isActive = entry.key === step;
-            const isDone = index < activeStepIndex;
+            const isSummary = step === "summary";
+            const isDone = isSummary || index < activeStepIndex;
             const canReach = canAccessStep(entry.key);
+
             return (
-              <button
-                key={entry.key}
-                className={`rounded-full border px-4 py-1 transition ${
-                  isActive
-                    ? "border-white bg-white text-black"
-                    : isDone
-                      ? "border-white/40 text-neutral-200"
-                      : "border-white/10 text-neutral-500 hover:border-white/30"
-                }`}
-                onClick={() => goToStep(entry.key)}
-                disabled={!canReach}
-              >
-                {entry.label}
-              </button>
+                <div key={entry.key} className="flex items-center flex-1">
+                  {/* Circle + Label */}
+                  <div className="flex flex-col items-center">
+                    <button
+                        onClick={() => goToStep(entry.key)}
+                        disabled={!canReach}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full border text-xs font-medium transition-all duration-300 ${
+                            isActive && !isSummary
+                                ? "bg-neutral-900 text-white border-white shadow-[0_0_10px_rgba(255,255,255,0.4)]"
+                                : isDone
+                                    ? "bg-white text-black border-white"
+                                    : "border-neutral-700 text-neutral-500 bg-transparent"
+                        }`}
+                    >
+                      {isDone ? (
+                          <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 text-black"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                      ) : (
+                          index + 1
+                      )}
+                    </button>
+                    <span
+                        className={`mt-2 text-[11px] tracking-[0.2em] ${
+                            isActive ? "text-white" : isDone ? "text-neutral-400" : "text-neutral-600"
+                        }`}
+                    >
+            {entry.label}
+          </span>
+                  </div>
+
+                  {index !== bookingSteps.length - 1 && (
+                      <div
+                          className={`flex-1 h-[1px] mx-2 relative -top-2.5 ${
+                              isDone ? "bg-neutral-400" : "bg-neutral-700"
+                          }`}
+                      />
+                  )}
+
+                </div>
             );
           })}
         </nav>
+
 
         {message && (
           <div
@@ -489,28 +522,41 @@ const BookingPage = () => {
               </div>
             ) : (
               <>
-                <div className="flex gap-2 overflow-x-auto pb-1">
+                <div className="flex gap-3 overflow-x-auto pb-2">
                   {availabilityDays.map((day) => {
                     const hasSlots = day.slots.some((slot) => slot.available);
                     const active = selectedDay === day.date;
+
+                    const formatDisplayDate = (dateString: string) => {
+                      const date = new Date(dateString);
+                      const month = date.getMonth() + 1;
+                      const dayNum = date.getDate();
+                      const weekday = date.toLocaleDateString("mn-MN", { weekday: "short" });
+                      return { label: `${month}/${dayNum}`, weekday };
+                    };
+
+                    const { label, weekday } = formatDisplayDate(day.date);
+
                     return (
-                      <button
-                        key={day.date}
-                        className={`rounded-full px-3 py-1 text-xs transition ${
-                          active
-                            ? "bg-white text-black"
-                            : hasSlots
-                              ? "border border-white/20 text-neutral-200 hover:border-white/40"
-                              : "border border-white/5 text-neutral-500"
-                        }`}
-                        onClick={() => setSelectedDay(day.date)}
-                        disabled={!hasSlots}
-                      >
-                        {formatDisplayDate(day.date)}
-                      </button>
+                        <button
+                            key={day.date}
+                            className={`flex flex-col items-center rounded-xl px-4 py-2 text-sm font-medium transition ${
+                                active
+                                    ? "bg-white text-black shadow-md"
+                                    : hasSlots
+                                        ? "border border-white/30 text-neutral-200 hover:bg-white/10"
+                                        : "border border-white/10 text-neutral-500"
+                            }`}
+                            onClick={() => setSelectedDay(day.date)}
+                            disabled={!hasSlots}
+                        >
+                          <span>{label}</span>
+                          <span className="text-[10px] opacity-70">{weekday}</span>
+                        </button>
                     );
                   })}
                 </div>
+
 
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {displayedSlots.length ? (
@@ -595,46 +641,6 @@ const BookingPage = () => {
             </div>
           </section>
         )}
-
-        <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.28em] text-neutral-400">Захиалгын түүх</h2>
-            <button
-              className="text-xs text-neutral-400 underline underline-offset-4 transition hover:text-neutral-200 disabled:text-neutral-600"
-              onClick={() => void loadHistory()}
-              disabled={isLoadingHistory}
-            >
-              {isLoadingHistory ? "Ачаалж байна" : "Шинэчлэх"}
-            </button>
-          </div>
-          <div className="mt-4 space-y-3">
-            {isLoadingHistory ? (
-              [0, 1, 2].map((value) => (
-                <div key={value} className="h-14 animate-pulse rounded-2xl border border-white/10 bg-white/5" />
-              ))
-            ) : recentBookings.length ? (
-              recentBookings.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-xs text-neutral-300"
-                >
-                  <div className="space-y-1">
-                    <p className="text-sm text-neutral-100">{booking.location.name}</p>
-                    <p className="text-neutral-400">{booking.artist.name}</p>
-                  </div>
-                  <div className="text-right text-neutral-400">
-                    <p>{formatDisplayDate(booking.date)}</p>
-                    <p>{formatTimeLabel(booking.time)}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-center text-xs text-neutral-500">
-                Захиалга хараахан алга байна.
-              </p>
-            )}
-          </div>
-        </section>
       </div>
     </main>
   );

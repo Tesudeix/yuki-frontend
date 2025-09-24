@@ -4,8 +4,9 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuthContext } from "@/contexts/auth-context";
-import { ADMIN_PHONE, PASSWORD_MIN_LENGTH, PHONE_REGEX } from "@/lib/constants";
+import { ADMIN_PHONE, PASSWORD_MIN_LENGTH } from "@/lib/constants";
 import { formatDateTime } from "@/lib/date-format";
+import { isValidPhoneInput, normalizePhoneForE164 } from "@/lib/phone";
 import type { AuthMode, MessageDescriptor } from "@/lib/types";
 
 const authModes: AuthMode[] = ["login", "register"];
@@ -15,18 +16,17 @@ const MODE_LABELS: Record<AuthMode, string> = {
   register: "Бүртгүүлэх",
 };
 
-const messageColors: Record<MessageDescriptor["tone"], string> = {
-  success: "border-emerald-500/40 bg-emerald-500/10 text-emerald-100",
-  error: "border-rose-500/40 bg-rose-500/10 text-rose-100",
-  info: "border-sky-500/40 bg-sky-500/10 text-sky-100",
+const messageStyles: Record<MessageDescriptor["tone"], string> = {
+  success: "border-emerald-400/40 bg-emerald-500/10 text-emerald-950",
+  error: "border-rose-400/40 bg-rose-500/10 text-rose-950",
+  info: "border-sky-400/40 bg-sky-500/10 text-sky-950",
 };
 
-const cardClass =
-  "rounded-2xl border border-white/10 bg-white/[0.04] shadow-[0_0_32px_-20px_rgba(255,255,255,0.6)] backdrop-blur";
+const cardClass = "rounded-[24px] border border-neutral-200/70 bg-white/95 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.35)] backdrop-blur";
 const inputClass =
-  "w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-neutral-100 outline-none transition focus:border-white/30 focus:ring-2 focus:ring-white/10";
+  "w-full rounded-2xl border border-neutral-200/80 bg-white/80 px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-black focus:ring-4 focus:ring-neutral-900/10";
 const pillButtonClass =
-  "rounded-full px-4 py-2 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40";
+  "rounded-full px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40";
 
 const AuthPage = () => {
   const router = useRouter();
@@ -40,7 +40,6 @@ const AuthPage = () => {
     adminLogin,
     fetchProfile,
     logout,
-    hydrated,
   } = useAuthContext();
 
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -63,41 +62,27 @@ const AuthPage = () => {
     router.prefetch("/admin");
   }, [router]);
 
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
-
-    if (token) {
-      router.prefetch("/booking");
-    }
-    if (adminToken) {
-      router.prefetch("/admin");
-    }
-  }, [adminToken, hydrated, router, token]);
-
   const isBusy = status !== "idle";
 
   const lastVerifiedLabel = formatDateTime(user?.lastVerifiedAt);
   const lastLoginLabel = formatDateTime(user?.lastLoginAt);
   const lastPasswordResetLabel = formatDateTime(user?.lastPasswordResetAt);
 
-  const validatePhone = (value: string) => PHONE_REGEX.test(value.trim());
-
   const canSubmit = useMemo(() => {
     if (isBusy) {
       return false;
     }
 
-    const trimmedPhone = phone.trim();
-    const trimmedPassword = password.trim();
-
-    if (!validatePhone(trimmedPhone) || trimmedPassword.length < PASSWORD_MIN_LENGTH) {
+    if (!isValidPhoneInput(phone)) {
       return false;
     }
 
-    if (authMode === "register") {
-      return trimmedPassword === confirmPassword.trim();
+    if (password.trim().length < PASSWORD_MIN_LENGTH) {
+      return false;
+    }
+
+    if (authMode === "register" && password.trim() !== confirmPassword.trim()) {
+      return false;
     }
 
     return true;
@@ -105,21 +90,23 @@ const AuthPage = () => {
 
   const primaryLabel = authMode === "register" ? "Бүртгүүлэх" : "Нэвтрэх";
 
+  const getNormalizedPhone = (raw: string): string => normalizePhoneForE164(raw);
+
   const handleRegistration = async () => {
     const trimmedPhone = phone.trim();
-    const trimmedPassword = password.trim();
+    const normalizedPhone = getNormalizedPhone(trimmedPhone);
 
-    if (!validatePhone(trimmedPhone)) {
+    if (!isValidPhoneInput(trimmedPhone) || !normalizedPhone) {
       setMessage({ tone: "error", text: "Утасны дугаарыг зөв оруулна уу." });
       return;
     }
 
-    if (trimmedPassword.length < PASSWORD_MIN_LENGTH) {
+    if (password.trim().length < PASSWORD_MIN_LENGTH) {
       setMessage({ tone: "error", text: `Нууц үг хамгийн багадаа ${PASSWORD_MIN_LENGTH} тэмдэгт байх ёстой.` });
       return;
     }
 
-    if (trimmedPassword !== confirmPassword.trim()) {
+    if (password.trim() !== confirmPassword.trim()) {
       setMessage({ tone: "error", text: "Нууц үгийн баталгаажуулалт тохирохгүй байна." });
       return;
     }
@@ -127,7 +114,7 @@ const AuthPage = () => {
     setStatus("submitting");
     setMessage(null);
 
-    const result = await registerUser({ phone: trimmedPhone, password: trimmedPassword, name: name.trim() || undefined });
+    const result = await registerUser({ phone: normalizedPhone, password: password.trim(), name: name.trim() || undefined });
     setStatus("idle");
 
     if (result.ok) {
@@ -140,14 +127,14 @@ const AuthPage = () => {
 
   const handleLogin = async () => {
     const trimmedPhone = phone.trim();
-    const trimmedPassword = password.trim();
+    const normalizedPhone = getNormalizedPhone(trimmedPhone);
 
-    if (!validatePhone(trimmedPhone)) {
+    if (!isValidPhoneInput(trimmedPhone) || !normalizedPhone) {
       setMessage({ tone: "error", text: "Утасны дугаарыг дахин шалгаарай." });
       return;
     }
 
-    if (trimmedPassword.length < PASSWORD_MIN_LENGTH) {
+    if (password.trim().length < PASSWORD_MIN_LENGTH) {
       setMessage({ tone: "error", text: `Нууц үг хамгийн багадаа ${PASSWORD_MIN_LENGTH} тэмдэгт байх ёстой.` });
       return;
     }
@@ -155,8 +142,8 @@ const AuthPage = () => {
     setStatus("submitting");
     setMessage(null);
 
-    if (trimmedPhone === ADMIN_PHONE) {
-      const adminResult = await adminLogin({ phone: trimmedPhone, password: trimmedPassword });
+    if (normalizedPhone === ADMIN_PHONE) {
+      const adminResult = await adminLogin({ phone: normalizedPhone, password: password.trim() });
       setStatus("idle");
 
       if (adminResult.ok) {
@@ -168,7 +155,7 @@ const AuthPage = () => {
       return;
     }
 
-    const result = await loginUser({ phone: trimmedPhone, password: trimmedPassword });
+    const result = await loginUser({ phone: normalizedPhone, password: password.trim() });
     setStatus("idle");
 
     if (result.ok) {
@@ -210,90 +197,61 @@ const AuthPage = () => {
     setPassword("");
     setConfirmPassword("");
     setName("");
-    setMessage({ tone: "info", text: "Амжилттай гарлаа." });
+    setMessage({ tone: "info", text: "Сесс дууслаа." });
   };
 
   return (
-    <main className="min-h-screen bg-black text-neutral-100">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center gap-8 px-5 py-16">
-        <header className="space-y-2 text-center sm:text-left">
-          <span className="text-[11px] uppercase tracking-[0.36em] text-neutral-500">Yuki Studio</span>
-          <h1 className="text-3xl font-semibold tracking-tight">Нэг дугаараар бүх захиалга</h1>
-          <p className="text-sm text-neutral-500">Утас + нууц үг. Илүү ажиллагаа хэрэггүй.</p>
+    <main className="min-h-screen bg-white text-neutral-900">
+      <div className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 px-6 py-12 sm:max-w-md sm:px-8">
+        <header className="space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.42em] text-neutral-400">Yuki Studio //</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-neutral-950">Flow into your next session</h1>
+          <p className="text-sm text-neutral-500">One phone. One password. Booking in under a minute.</p>
         </header>
 
         {message && (
-          <div className={`${cardClass} border-dashed p-4 text-sm ${messageColors[message.tone]}`}>
+          <div className={`rounded-xl border px-4 py-3 text-sm ${messageStyles[message.tone]}`}>
             {message.text}
           </div>
         )}
 
         {(token || adminToken) && (
-          <section className={`${cardClass} p-6 space-y-6`}>
-            {token && user && (
-              <div className="space-y-3">
-                <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">Идэвхтэй хэрэглэгч</p>
-                <p className="text-lg font-semibold">{user.phone}</p>
-                <dl className="space-y-1 text-xs text-neutral-400">
-                  {lastLoginLabel && (
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-neutral-500">Сүүлд нэвтэрсэн</dt>
-                      <dd className="text-right text-neutral-300">{lastLoginLabel}</dd>
-                    </div>
+            <section className="flex flex-col gap-4">
+              <div className="text-xs uppercase tracking-[0.34em] text-neutral-400">Active Session</div>
+              <section className={`${cardClass} p-6 space-y-5 border-neutral-200/60`}>
+                <div className="space-y-3">
+                  {token && user && (
+                      <div className="space-y-2">
+                        {/* ...user info... */}
+                      </div>
                   )}
-                  {lastVerifiedLabel && (
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-neutral-500">Сүүлд баталгаажсан</dt>
-                      <dd className="text-right text-neutral-300">{lastVerifiedLabel}</dd>
-                    </div>
+
+                  {adminToken && adminProfile && (
+                      <div className="space-y-2 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                        {/* ...admin info... */}
+                      </div>
                   )}
-                  {lastPasswordResetLabel && (
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-neutral-500">Сүүлд нууц үг шинэчилсэн</dt>
-                      <dd className="text-right text-neutral-300">{lastPasswordResetLabel}</dd>
-                    </div>
-                  )}
-                </dl>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <button className={`${pillButtonClass} border border-white/10 hover:border-white/30 hover:bg-white/10`} onClick={() => router.push("/booking")}>
-                    Захиалга руу
-                  </button>
-                  <button
-                    className={`${pillButtonClass} border border-white/10 hover:border-white/30 hover:bg-white/10 disabled:border-white/5 disabled:text-neutral-500`}
-                    onClick={handleFetchProfile}
-                    disabled={isBusy}
-                  >
-                    Профайл шинэчлэх
-                  </button>
                 </div>
-              </div>
-            )}
 
-            {adminToken && adminProfile && (
-              <div className="space-y-3 rounded-xl border border-white/10 bg-black/40 p-4 text-sm">
-                <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">Админ</p>
-                <p className="font-semibold text-neutral-100">{adminProfile.phone}</p>
-                {adminProfile.name && <p className="text-neutral-300">{adminProfile.name}</p>}
-                <button className={`${pillButtonClass} w-full border border-white/10 hover:border-white/30 hover:bg-white/10`} onClick={() => router.push("/admin")}>
-                  Админ самбар
+                <button
+                    className={`${pillButtonClass} w-full border border-neutral-300 bg-neutral-100 text-neutral-800 hover:border-neutral-500`}
+                    onClick={handleLogout}
+                >
+                  Гарах
                 </button>
-              </div>
-            )}
+              </section>
+            </section>
+          )}
 
-            <button className={`${pillButtonClass} w-full border border-white/15 py-3 text-sm font-semibold hover:border-white/30 hover:bg-white/10`} onClick={handleLogout}>
-              Сэссийг дуусгах
-            </button>
-          </section>
-        )}
 
-        <section className={`${cardClass} p-6 space-y-6`}>
-          <nav className="inline-flex gap-2 rounded-full bg-white/5 p-1 text-xs text-neutral-400">
+        <section className={`${cardClass} p-5 space-y-6`}>
+          <nav className="flex gap-2 rounded-full border border-neutral-200 bg-neutral-100 p-1 text-sm text-neutral-500">
             {authModes.map((mode) => {
               const active = authMode === mode;
               return (
                 <button
                   key={mode}
-                  className={`${pillButtonClass} ${active ? "bg-white text-black" : "hover:bg-white/10"}`}
+                  className={`${pillButtonClass} flex-1 ${active ? "bg-neutral-900 text-white shadow-[0_8px_16px_-12px_rgba(15,23,42,0.45)]" : "hover:bg-white/80"}`}
                   onClick={() => setAuthMode(mode)}
                   disabled={active || isBusy}
                   type="button"
@@ -304,22 +262,23 @@ const AuthPage = () => {
             })}
           </nav>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <label className="block space-y-2 text-xs">
-              <span className="uppercase tracking-[0.3em] text-neutral-500">Утасны дугаар</span>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-neutral-600">Утасны дугаар</span>
               <input
                 autoComplete="tel"
                 className={inputClass}
-                placeholder="+976XXXXXXXX"
+                placeholder="99112233"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
                 disabled={isBusy}
-                inputMode="tel"
+                inputMode="numeric"
               />
+              <span className="text-xs text-neutral-400">Олон улсын код нэмэх шаардлагагүй.</span>
             </label>
 
-            <label className="block space-y-2 text-xs">
-              <span className="uppercase tracking-[0.3em] text-neutral-500">Нууц үг</span>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-neutral-600">Нууц үг</span>
               <input
                 type="password"
                 autoComplete={authMode === "register" ? "new-password" : "current-password"}
@@ -329,13 +288,13 @@ const AuthPage = () => {
                 onChange={(event) => setPassword(event.target.value)}
                 disabled={isBusy}
               />
-              <span className="text-[11px] text-neutral-500">Багадаа {PASSWORD_MIN_LENGTH} тэмдэгт.</span>
+              <span className="text-xs text-neutral-400">Багадаа {PASSWORD_MIN_LENGTH} тэмдэгт.</span>
             </label>
 
             {authMode === "register" && (
               <>
-                <label className="block space-y-2 text-xs">
-                  <span className="uppercase tracking-[0.3em] text-neutral-500">Нууц үг баталгаажуулах</span>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-neutral-600">Нууц үг баталгаажуулах</span>
                   <input
                     type="password"
                     autoComplete="new-password"
@@ -347,11 +306,11 @@ const AuthPage = () => {
                   />
                 </label>
 
-                <label className="block space-y-2 text-xs">
-                  <span className="uppercase tracking-[0.3em] text-neutral-500">Нэр (сонголтоор)</span>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-neutral-600">Нэр (сонголтоор)</span>
                   <input
                     className={inputClass}
-                    placeholder="Жишээ: Нараа"
+                    placeholder="Нэрээ оруулна уу"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     disabled={isBusy}
@@ -361,22 +320,17 @@ const AuthPage = () => {
             )}
 
             <button
-              className="w-full rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-neutral-200 disabled:bg-white/30 disabled:text-neutral-500"
+              className="group relative w-full overflow-hidden rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40 disabled:bg-neutral-300 disabled:text-neutral-500"
               type="submit"
               disabled={!canSubmit}
             >
-              {status === "submitting"
-                ? authMode === "register"
-                  ? "Бүртгэл үүсгэж байна"
-                  : "Нэвтэрч байна"
-                : primaryLabel}
+              <span className="relative z-10">{status === "submitting" ? (authMode === "register" ? "Бүртгэл үүсгэж байна" : "Нэвтэрч байна") : primaryLabel}</span>
+              <span className="absolute inset-0 translate-y-full bg-white/20 transition group-hover:translate-y-0"/>
             </button>
           </form>
 
           {authMode === "login" && (
-            <p className="text-[11px] text-neutral-500">
-              Нууц үгээ мартсан уу? Түр хугацаанд студийн ажилтанд хандаж сессийг шинэчилж өгнө.
-            </p>
+            <p className="text-xs text-neutral-400">Нууц үгээ мартсан бол студийн ажилтнаас шинэ шуудан үүсгүүлэх боломжтой.</p>
           )}
         </section>
       </div>
