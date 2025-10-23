@@ -1,6 +1,21 @@
 import type { NextConfig } from "next";
 
-const backend = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+function normalizeBackendUrl(input?: string): string {
+  const raw = (input || "").trim();
+  if (!raw) return "http://127.0.0.1:4000";
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
+  const withoutSlash = withScheme.replace(/\/$/, "");
+  try {
+    // Validate URL format
+    // eslint-disable-next-line no-new
+    new URL(withoutSlash);
+    return withoutSlash;
+  } catch {
+    return "http://127.0.0.1:4000";
+  }
+}
+
+const backend = normalizeBackendUrl(process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "");
 
 const nextConfig: NextConfig = {
   async rewrites() {
