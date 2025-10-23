@@ -59,7 +59,7 @@ export default function UploadPage() {
         <p style={{ marginTop: "0.5rem" }}>
           Direct download: <a href={link} target="_blank" rel="noreferrer">{link}</a>
         </p>
-      )}d
+      )}
     </div>
   );
 }
