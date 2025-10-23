@@ -1,0 +1,65 @@
+"use client";
+
+import React from "react";
+import { getApiBase } from "@/lib/api-client";
+
+export default function UploadPage() {
+  const [status, setStatus] = React.useState<string>("");
+  const [link, setLink] = React.useState<string>("");
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus("Uploading...");
+    setLink("");
+
+    const form = e.currentTarget;
+    const input = form.elements.namedItem("file") as HTMLInputElement | null;
+    if (!input || !input.files || input.files.length === 0) {
+      setStatus("Please choose a file.");
+      return;
+    }
+
+    const data = new FormData();
+    data.append("file", input.files[0]);
+
+    try {
+      const res = await fetch(`${getApiBase()}/upload`, { method: "POST", body: data });
+      const json = await res.json();
+      if (!res.ok || !json) {
+        setStatus(`Upload failed (${res.status})`);
+        return;
+      }
+
+      if (json.success && json.downloadUrl) {
+        setStatus("Uploaded successfully.");
+        setLink(json.downloadUrl as string);
+      } else if (json.downloadUrl) {
+        setStatus("Uploaded successfully.");
+        setLink(json.downloadUrl as string);
+      } else {
+        setStatus(json.error || json.message || "Upload failed.");
+      }
+    } catch (err: any) {
+      setStatus(err?.message || "Upload error.");
+    }
+  };
+
+  return (
+    <div style={{ padding: "1.5rem", maxWidth: 640 }}>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" }}>Upload a File</h1>
+      <form onSubmit={onSubmit} encType="multipart/form-data">
+        <input type="file" name="file" required />
+        <div style={{ marginTop: "1rem" }}>
+          <button type="submit" style={{ padding: "0.5rem 1rem" }}>Upload</button>
+        </div>
+      </form>
+      {status && <p style={{ marginTop: "1rem" }}>{status}</p>}
+      {link && (
+        <p style={{ marginTop: "0.5rem" }}>
+          Direct download: <a href={link} target="_blank" rel="noreferrer">{link}</a>
+        </p>
+      )}
+    </div>
+  );
+}
+
