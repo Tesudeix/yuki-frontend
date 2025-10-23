@@ -39,8 +39,9 @@ export default function UploadPage() {
       } else {
         setStatus(json.error || json.message || "Upload failed.");
       }
-    } catch (err: any) {
-      setStatus(err?.message || "Upload error.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Upload error.";
+      setStatus(message);
     }
   };
 
@@ -62,4 +63,3 @@ export default function UploadPage() {
     </div>
   );
 }
-
