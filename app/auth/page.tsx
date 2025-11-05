@@ -58,7 +58,8 @@ const AuthPage = () => {
   }, [authMode]);
 
   useEffect(() => {
-    router.prefetch("/booking");
+    router.prefetch("/feed");
+    router.prefetch("/profile");
     router.prefetch("/admin");
   }, [router]);
 
@@ -118,8 +119,8 @@ const AuthPage = () => {
     setStatus("idle");
 
     if (result.ok) {
-      setMessage({ tone: "success", text: "Бүртгэл амжилттай. Захиалга руу шилжиж байна." });
-      router.push("/booking");
+      setMessage({ tone: "success", text: "Бүртгэл амжилттай. Feed рүү шилжиж байна." });
+      router.push("/feed");
     } else {
       setMessage({ tone: "error", text: result.error });
     }
@@ -160,7 +161,7 @@ const AuthPage = () => {
 
     if (result.ok) {
       setMessage({ tone: "success", text: "Амжилттай нэвтэрлээ." });
-      router.push("/booking");
+      router.push("/feed");
     } else {
       setMessage({ tone: "error", text: result.error });
     }
@@ -204,9 +205,9 @@ const AuthPage = () => {
     <main className="min-h-screen bg-white text-neutral-900">
       <div className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 px-6 py-12 sm:max-w-md sm:px-8">
         <header className="space-y-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.42em] text-neutral-400">Yuki Studio //</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.42em] text-neutral-400">Tesudeix</p>
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-950">Flow into your next session</h1>
-          <p className="text-sm text-neutral-500">One phone. One password. Booking in under a minute.</p>
+          <p className="text-sm text-neutral-500">One phone. One password. Post in under a minute.</p>
         </header>
 
         {message && (

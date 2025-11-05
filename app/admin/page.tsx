@@ -341,7 +341,7 @@ const AdminPage = () => {
             <div className="flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:gap-3">
               <button
                 className="rounded-2xl border border-white/10 px-4 py-2 text-neutral-200 transition hover:border-white/30 hover:bg-white/10"
-                onClick={() => router.push("/booking")}
+                onClick={() => router.push("/feed")}
               >
                 Хэрэглэгчийн урсгал руу очих
               </button>

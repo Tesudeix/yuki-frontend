@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 const HomePage = async () => {
-  redirect("/auth");
+  redirect("/feed");
 };
 
 export default HomePage;

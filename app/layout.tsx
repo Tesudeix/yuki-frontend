@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Yuki Studio • Салон захиалга",
-  description: "Twilio Verify баталгаажуулалттай минимал салон захиалгын систем",
+  title: "Yuki Social • Feed",
+  description: "Minimal social feed with auth on Yuki backend",
 };
 
 export default function RootLayout({
