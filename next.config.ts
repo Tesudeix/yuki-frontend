@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 function normalizeBackendUrl(input?: string): string {
   const raw = (input || "").trim();
@@ -31,6 +32,15 @@ const nextConfig: NextConfig = {
         destination: `${backend}/files/:path*`,
       },
     ];
+  },
+  webpack(config) {
+    // Ensure alias '@' points to project root for both TS and webpack resolution
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      "@": path.resolve(__dirname),
+    };
+    return config;
   },
 };
 
