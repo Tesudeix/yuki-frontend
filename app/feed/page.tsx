@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/auth-context";
-import { BASE_URL } from "@/lib/config";
+import { BASE_URL } from "../../lib/config";
 import PostInput from "@/app/components/PostInput";
 import FeedPostCard, { type Post } from "@/app/components/FeedPostCard";
 import LeftSidebar from "@/app/components/LeftSidebar";

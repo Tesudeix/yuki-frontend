@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { BASE_URL } from "@/lib/config";
+import { BASE_URL } from "../../lib/config";
 
 type User = { id?: string; _id?: string; name?: string | null; phone?: string };
 type Post = { _id: string; user?: User; likes?: unknown[]; comments?: unknown[]; shares?: number };
@@ -65,4 +65,3 @@ export default function TopMembers() {
     </section>
   );
 }
-

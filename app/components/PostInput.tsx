@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/auth-context";
-import { BASE_URL } from "@/lib/config";
+import { BASE_URL } from "../../lib/config";
 
 type Props = { onPost?: (post: any) => void };
 
@@ -71,4 +71,3 @@ export default function PostInput({ onPost }: Props) {
     </form>
   );
 }
-

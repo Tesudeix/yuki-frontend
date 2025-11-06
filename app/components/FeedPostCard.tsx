@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import { useAuthContext } from "@/contexts/auth-context";
-import { BASE_URL, UPLOADS_URL } from "@/lib/config";
+import { BASE_URL, UPLOADS_URL } from "../../lib/config";
 
 type User = { _id?: string; id?: string; name?: string; phone?: string };
 type Reply = { _id: string; user?: User; content: string };
@@ -254,4 +254,3 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
     </article>
   );
 }
-

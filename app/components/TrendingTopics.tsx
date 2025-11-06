@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { BASE_URL } from "@/lib/config";
+import { BASE_URL } from "../../lib/config";
 
 type Post = {
   _id: string;
@@ -54,4 +54,3 @@ export default function TrendingTopics() {
     </section>
   );
 }
-

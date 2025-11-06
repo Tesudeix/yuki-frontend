@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
-import TrendingTopics from "@/app/components/TrendingTopics";
-import TopMembers from "@/app/components/TopMembers";
+import TrendingTopics from "./TrendingTopics";
+import TopMembers from "./TopMembers";
 
 export default function RightSidebar() {
   return (
