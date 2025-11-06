@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import type { AuthenticatedUser } from "@/lib/types";
 import { useAuthContext } from "@/contexts/auth-context";
 import { ADMIN_PHONE } from "@/lib/constants";
 import { BASE_URL } from "@/lib/config";
@@ -23,7 +25,7 @@ const ytIdFromUrl = (url: string) => {
 export default function ClassroomPage() {
   const { user, token } = useAuthContext();
   const isAdmin = useMemo(
-    () => Boolean((user?.phone && user.phone === ADMIN_PHONE) || (user as any)?.classroomAccess || user?.role === "admin"),
+    () => Boolean((user?.phone && user.phone === ADMIN_PHONE) || (user as AuthenticatedUser | null)?.classroomAccess || user?.role === "admin"),
     [user],
   );
 
@@ -53,8 +55,10 @@ export default function ClassroomPage() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ phone: grantPhone, access }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      type ApiError = { error?: unknown } & Record<string, unknown>;
+      const data = (await res.json().catch(() => ({} as ApiError))) as ApiError;
+      const message = typeof data.error === "string" ? data.error : undefined;
+      if (!res.ok) throw new Error(message ?? `HTTP ${res.status}`);
       alert("Updated classroom access");
     } catch (e) {
       alert(`Failed to update access: ${e instanceof Error ? e.message : "Unknown error"}`);
@@ -118,8 +122,10 @@ export default function ClassroomPage() {
         body: JSON.stringify({ url: newUrl, title: newTitle, description: newDesc, folder: newFolder }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({} as any));
-        throw new Error(err?.error || `HTTP ${res.status}`);
+        type ApiError = { error?: unknown } & Record<string, unknown>;
+        const err = (await res.json().catch(() => ({} as ApiError))) as ApiError;
+        const message = typeof err.error === "string" ? err.error : undefined;
+        throw new Error(message ?? `HTTP ${res.status}`);
       }
       const created = (await res.json()) as Lesson;
       setLessons((prev) => [...prev, created]);
@@ -139,8 +145,10 @@ export default function ClassroomPage() {
         body: JSON.stringify({ url: newUrl, title: newTitle, description: newDesc, folder: newFolder }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({} as any));
-        throw new Error(err?.error || `HTTP ${res.status}`);
+        type ApiError = { error?: unknown } & Record<string, unknown>;
+        const err = (await res.json().catch(() => ({} as ApiError))) as ApiError;
+        const message = typeof err.error === "string" ? err.error : undefined;
+        throw new Error(message ?? `HTTP ${res.status}`);
       }
       const updated = (await res.json()) as Lesson;
       setLessons((prev) => prev.map((l) => (l._id === updated._id ? updated : l)));
@@ -159,8 +167,10 @@ export default function ClassroomPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({} as any));
-        throw new Error(err?.error || `HTTP ${res.status}`);
+        type ApiError = { error?: unknown } & Record<string, unknown>;
+        const err = (await res.json().catch(() => ({} as ApiError))) as ApiError;
+        const message = typeof err.error === "string" ? err.error : undefined;
+        throw new Error(message ?? `HTTP ${res.status}`);
       }
       setLessons((prev) => prev.filter((l) => l._id !== id));
       setSelected((s) => (s && s._id === id ? null : s));
@@ -241,10 +251,13 @@ export default function ClassroomPage() {
                 />
                 {canSave && (
                   <div className="flex items-center gap-3 text-xs text-neutral-400">
-                    <img
+                    <Image
                       src={`https://img.youtube.com/vi/${ytIdFromUrl(newUrl)}/hqdefault.jpg`}
                       alt="preview"
+                      width={240}
+                      height={160}
                       className="h-16 w-24 rounded object-cover"
+                      unoptimized
                     />
                     <div className="min-w-0">
                       <div className="truncate font-medium text-neutral-200">{newTitle}</div>

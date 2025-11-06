@@ -1,5 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL } from "../../lib/config";
@@ -126,10 +127,13 @@ export default function ProfilePage() {
         <header className="flex items-center gap-4">
           <div className="relative">
             {user?.avatarUrl ? (
-              <img
+              <Image
                 src={user.avatarUrl as string}
                 alt="Avatar"
+                width={64}
+                height={64}
                 className="h-16 w-16 rounded-full object-cover"
+                unoptimized
               />
             ) : (
               <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-lg font-bold">

@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuthContext } from "@/contexts/auth-context";
 
@@ -11,7 +12,7 @@ export default function LeftSidebar() {
       <div className="grid gap-3">
         <div className="bg-[#111111] rounded-xl p-4 flex items-center gap-3">
           {user?.avatarUrl ? (
-            <img src={user.avatarUrl as string} alt="Avatar" className="h-10 w-10 rounded-full object-cover" />
+            <Image src={user.avatarUrl as string} alt="Avatar" width={40} height={40} className="h-10 w-10 rounded-full object-cover" unoptimized />
           ) : (
             <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-sm font-bold">
               {(user?.name || user?.phone || "U").toString().slice(0, 2).toUpperCase()}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/auth-context";
@@ -105,10 +106,13 @@ export default function SiteHeader() {
                 aria-expanded={menuOpen}
               >
                 {user?.avatarUrl ? (
-                  <img
+                  <Image
                     src={user.avatarUrl as string}
                     alt="Avatar"
+                    width={28}
+                    height={28}
                     className="h-7 w-7 rounded-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white">
@@ -205,20 +209,7 @@ export default function SiteHeader() {
   );
 }
 
-function LogoIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="h-5 w-5 text-white"
-      aria-hidden
-    >
-      <path d="M12 2a10 10 0 1 0 10 10A10.012 10.012 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8Z" />
-      <path d="M12 6a6 6 0 0 0-6 6 1 1 0 0 0 2 0 4 4 0 1 1 4 4 1 1 0 0 0 0 2 6 6 0 0 0 0-12Z" />
-    </svg>
-  );
-}
+// Removed unused LogoIcon to satisfy ESLint
 
 function ChevronDownIcon({ className = "" }: { className?: string }) {
   return (

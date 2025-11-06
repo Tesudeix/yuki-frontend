@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import Image from "next/image";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL, UPLOADS_URL } from "../../lib/config";
 import { ADMIN_PHONE } from "@/lib/constants";
@@ -39,23 +40,18 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
   const { token, user } = useAuthContext();
   const [state, setState] = useState<Post>(post);
   const [openComments, setOpenComments] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [shared, setShared] = useState(false);
 
   const display = state.sharedFrom || state;
-  const ownerId = getUserId(state.user);
   const currentUserId = getUserId(user);
 
   const likeCount = state.likes?.length || 0;
   const commentCount = state.comments?.length || 0;
   const shareCount = state.shares || 0;
 
-  const isOwner = useMemo(() => {
-    if (!currentUserId || !ownerId) return false;
-    return currentUserId === ownerId;
-  }, [currentUserId, ownerId]);
+  // owner check not used in UI, but kept for future logic if needed
 
   const isSuperAdmin = (user?.phone && user.phone === ADMIN_PHONE) || false;
 
@@ -134,25 +130,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
     }
   };
 
-  const handleEdit = async () => {
-    if (!token) return;
-    const next = window.prompt("Edit post", state.content);
-    if (next === null) return;
-    try {
-      const res = await fetch(`${BASE_URL}/api/posts/${state._id}`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ content: next }),
-      });
-      const data = await res.json();
-      if (res.ok && data?.post) {
-        setState((p) => ({ ...p, content: data.post.content }));
-        setMenuOpen(false);
-      }
-    } catch (err) {
-      console.warn("Edit error", err);
-    }
-  };
+  // edit disabled in current UI
 
   const handleDelete = async () => {
     if (!token) return;
@@ -186,8 +164,14 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
       <header className="grid grid-cols-[auto,1fr] gap-3 items-start">
         <div className="w-10 h-10 rounded-full overflow-hidden grid place-items-center bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white text-sm font-semibold">
           {state.user?.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={state.user.avatarUrl as string} alt="avatar" className="w-full h-full object-cover" />
+            <Image
+              src={state.user.avatarUrl as string}
+              alt="avatar"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              unoptimized
+            />
           ) : (
             <span>{letter}</span>
           )}
@@ -212,11 +196,13 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
       )}
 
       {display.image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           alt="post"
           src={`${UPLOADS_URL}/${display.image}`}
+          width={1200}
+          height={675}
           className="rounded-lg w-full h-auto object-cover"
+          unoptimized
         />
       )}
 
