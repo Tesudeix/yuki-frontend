@@ -94,12 +94,14 @@ export default function ProfilePage() {
       if (!downloadUrl) throw new Error("Upload failed");
 
       // 2) Persist avatarUrl to profile in backend (Mongo route)
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-User-Id": myId,
+      };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const patchRes = await fetch(`${BASE_URL}/users/profile/avatar`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": myId,
-        },
+        headers,
         body: JSON.stringify({ avatarUrl: downloadUrl }),
       });
       const patchJson = await patchRes.json();

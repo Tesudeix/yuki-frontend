@@ -55,7 +55,7 @@ export default function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-800 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/60">
+    <header className="sticky top-0 z-50 border-b  bg-black ">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <button
@@ -70,8 +70,7 @@ export default function SiteHeader() {
           </button>
 
           <Link href="/feed" className="inline-flex items-center gap-2 font-semibold text-white">
-            <LogoIcon />
-            <span>AI Clan</span>
+            <span>TESUDEIX</span>
           </Link>
           <nav className="ml-3 hidden items-center gap-1 md:flex">
             {navLinks.map((link) => (

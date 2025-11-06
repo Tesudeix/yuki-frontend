@@ -21,11 +21,15 @@ const messageStyles: Record<MessageDescriptor["tone"], string> = {
   info: "border-sky-400/40 bg-sky-500/10 text-sky-950",
 };
 
-const cardClass = "rounded-[24px] border border-neutral-200/70 bg-white/95 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.35)] backdrop-blur";
-const inputClass =
-  "w-full rounded-2xl border border-neutral-200/80 bg-white/80 px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-black focus:ring-4 focus:ring-neutral-900/10";
+// Accent color (note: provided as #1080CAz; using #1080CA assuming typo)
+const ACCENT = "#1080CA";
+const FOCUS = "#e93b68"; // subtle glow for focus state
+
+const cardClass = "rounded-sm border border-black/70 bg-black/95 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.35)] backdrop-blur";
+const baseInputClass =
+  `w-full rounded-sm border bg-black/80 px-4 py-3 text-base text-white outline-none transition focus:ring-4`;
 const pillButtonClass =
-  "rounded-full px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40";
+  "rounded-sm px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40";
 
 const AuthPage = () => {
   const router = useRouter();
@@ -48,6 +52,11 @@ const AuthPage = () => {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "processing">("idle");
   const [message, setMessage] = useState<MessageDescriptor | null>(null);
+
+  // Field interaction states for inline validation feedback
+  const [touchedPhone, setTouchedPhone] = useState(false);
+  const [touchedPassword, setTouchedPassword] = useState(false);
+  const [touchedConfirm, setTouchedConfirm] = useState(false);
 
   useEffect(() => {
     setMessage(null);
@@ -88,6 +97,11 @@ const AuthPage = () => {
 
     return true;
   }, [authMode, confirmPassword, isBusy, password, phone]);
+
+  // Inline error messages
+  const phoneError = !isValidPhoneInput(phone) ? "Утасны дугаарыг зөв оруулна уу." : "";
+  const passwordError = password.trim().length < PASSWORD_MIN_LENGTH ? `Нууц үг хамгийн багадаа ${PASSWORD_MIN_LENGTH} тэмдэгт.` : "";
+  const confirmError = authMode === "register" && password.trim() !== confirmPassword.trim() ? "Нууц үгийн баталгаажуулалт тохирохгүй." : "";
 
   const primaryLabel = authMode === "register" ? "Бүртгүүлэх" : "Нэвтрэх";
 
@@ -169,9 +183,11 @@ const AuthPage = () => {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit) {
-      return;
-    }
+    // show errors if invalid
+    setTouchedPhone(true);
+    setTouchedPassword(true);
+    setTouchedConfirm(true);
+    if (!canSubmit) return;
 
     if (authMode === "register") {
       void handleRegistration();
@@ -199,24 +215,25 @@ const AuthPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-white text-neutral-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 px-6 py-12 sm:max-w-md sm:px-8">
+    <main className="min-h-screen bg-[#161618] text-white">
+      <div className="mx-auto flex min-h-screen w-full max-w-[400px] flex-col justify-center px-6 py-12 sm:px-8">
         <header className="space-y-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.42em] text-neutral-400">Tesudeix</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-950">Flow into your next session</h1>
-          <p className="text-sm text-neutral-500">One phone. One password. Post in under a minute.</p>
+          <h1 className="text-white font-extrabold uppercase" style={{ color: "white", letterSpacing: "0.06em" }}>
+            <span className="text-2xl sm:text-3xl tracking-wide">TESUDEIX</span>
+          </h1>
+          <p className="text-sm text-white/90 pb-10 ">One phone. One password.</p>
         </header>
 
         {message && (
-          <div className={`rounded-xl border px-4 py-3 text-sm ${messageStyles[message.tone]}`}>
+          <div className={`rounded-sm border px-4 py-3 text-sm ${messageStyles[message.tone]}`}>
             {message.text}
           </div>
         )}
 
         {(token || adminToken) && (
-            <section className="flex flex-col gap-4">
-              <div className="text-xs uppercase tracking-[0.34em] text-neutral-400">Active Session</div>
-              <section className={`${cardClass} p-6 space-y-5 border-neutral-200/60`}>
+            <section className="flex flex-col gap-2">
+              <div className="text-xs uppercase tracking-[0.34em] text-white">Active Session</div>
+              <section className={`${cardClass} p-6 space-y-5 border-black`}>
                 <div className="space-y-3">
                   {token && user && (
                       <div className="space-y-2">
@@ -225,14 +242,14 @@ const AuthPage = () => {
                   )}
 
                   {adminToken && adminProfile && (
-                      <div className="space-y-2 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                      <div className="space-y-2 rounded-sm border border-black bg-black p-4">
                         {/* ...admin info... */}
                       </div>
                   )}
                 </div>
 
                 <button
-                    className={`${pillButtonClass} w-full border border-neutral-300 bg-neutral-100 text-neutral-800 hover:border-neutral-500`}
+                    className={`${pillButtonClass} w-full border border-neutral-300 bg-black text-white hover:border-neutral-500`}
                     onClick={handleLogout}
                 >
                   Гарах
@@ -243,16 +260,17 @@ const AuthPage = () => {
 
 
         <section className={`${cardClass} p-5 space-y-6`}>
-          <nav className="flex gap-2 rounded-full border border-neutral-200 bg-neutral-100 p-1 text-sm text-neutral-500">
+          <nav className="flex gap-2 rounded-sm border border-black bg-black p-1 text-sm text-white">
             {authModes.map((mode) => {
               const active = authMode === mode;
               return (
                 <button
                   key={mode}
-                  className={`${pillButtonClass} flex-1 ${active ? "bg-neutral-900 text-white shadow-[0_8px_16px_-12px_rgba(15,23,42,0.45)]" : "hover:bg-white/80"}`}
+                  className={`${pillButtonClass} flex-1 border ${active ? "border-transparent" : "border-black hover:bg-black"}`}
                   onClick={() => setAuthMode(mode)}
                   disabled={active || isBusy}
                   type="button"
+                  style={active ? { backgroundColor: ACCENT, color: "#fff" } : undefined}
                 >
                   {MODE_LABELS[mode]}
                 </button>
@@ -260,54 +278,76 @@ const AuthPage = () => {
             })}
           </nav>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-neutral-600">Утасны дугаар</span>
+          <form onSubmit={handleSubmit}>
+            <label className="block">
+              <span className="text-sm font-medium text-white">Утасны дугаар</span>
               <input
                 autoComplete="tel"
-                className={inputClass}
+                className={`${baseInputClass} ${touchedPhone && phoneError ? "border-rose-500 focus:ring-rose-500/30" : "border-black/80 focus:border-[var(--focus)]"}`}
+                style={{
+                  // focus glow color
+                  // expose CSS var for Tailwind-less custom shade
+                  ['--focus']: FOCUS,
+                } as React.CSSProperties}
                 placeholder="99112233"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
+                onBlur={() => setTouchedPhone(true)}
                 disabled={isBusy}
                 inputMode="numeric"
               />
-              <span className="text-xs text-neutral-400">Олон улсын код нэмэх шаардлагагүй.</span>
+              {touchedPhone && phoneError ? (
+                <span className="mt-1 block text-xs text-rose-600">{phoneError}</span>
+              ) : (
+                <span className="mt-1 block text-xs text-white">Олон улсын код нэмэх шаардлагагүй.</span>
+              )}
             </label>
 
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-neutral-600">Нууц үг</span>
+            <label className="block">
+              <span className="text-sm font-medium text-white">Нууц үг</span>
               <input
                 type="password"
                 autoComplete={authMode === "register" ? "new-password" : "current-password"}
-                className={inputClass}
+                className={`${baseInputClass} ${touchedPassword && passwordError ? "border-rose-500 focus:ring-rose-500/30" : "border-black/80 focus:border-[var(--focus)]"}`}
+                style={{ ['--focus']: FOCUS } as React.CSSProperties}
                 placeholder="••••••"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                onBlur={() => setTouchedPassword(true)}
                 disabled={isBusy}
               />
-              <span className="text-xs text-neutral-400">Багадаа {PASSWORD_MIN_LENGTH} тэмдэгт.</span>
+              {touchedPassword && passwordError ? (
+                <span className="mt-1 block text-xs text-rose-600">{passwordError}</span>
+              ) : (
+                <span className="mt-1 block text-xs text-white">Багадаа {PASSWORD_MIN_LENGTH} тэмдэгт.</span>
+              )}
             </label>
 
             {authMode === "register" && (
               <>
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-neutral-600">Нууц үг баталгаажуулах</span>
+                <label className="block">
+                  <span className="text-sm font-medium text-white">Нууц үг баталгаажуулах</span>
                   <input
                     type="password"
                     autoComplete="new-password"
-                    className={inputClass}
+                    className={`${baseInputClass} ${touchedConfirm && confirmError ? "border-rose-500 focus:ring-rose-500/30" : "border-black/80 focus:border-[var(--focus)]"}`}
+                    style={{ ['--focus']: FOCUS } as React.CSSProperties}
                     placeholder="••••••"
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
+                    onBlur={() => setTouchedConfirm(true)}
                     disabled={isBusy}
                   />
+                  {touchedConfirm && confirmError && (
+                    <span className="mt-1 block text-xs text-rose-600">{confirmError}</span>
+                  )}
                 </label>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-neutral-600">Нэр (сонголтоор)</span>
+                <label className="block pb-4">
+                  <span className="text-sm font-medium text-white">Нэр (сонголтоор)</span>
                   <input
-                    className={inputClass}
+                    className={`${baseInputClass} border-black/80 focus:border-[var(--focus)]`}
+                    style={{ ['--focus']: FOCUS } as React.CSSProperties}
                     placeholder="Нэрээ оруулна уу"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
@@ -318,17 +358,24 @@ const AuthPage = () => {
             )}
 
             <button
-              className="group relative w-full overflow-hidden rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40 disabled:bg-neutral-300 disabled:text-neutral-500"
+              className="group relative w-full overflow-hidden rounded-sm px-5 py-3 text-sm font-semibold text-white transition focus-visible:outline-none focus-visible:ring-4 disabled:opacity-60"
               type="submit"
               disabled={!canSubmit}
+              style={{ backgroundColor: ACCENT, boxShadow: "0 10px 24px -14px rgba(16,128,202,0.8)" }}
             >
               <span className="relative z-10">{status === "submitting" ? (authMode === "register" ? "Бүртгэл үүсгэж байна" : "Нэвтэрч байна") : primaryLabel}</span>
-              <span className="absolute inset-0 translate-y-full bg-white/20 transition group-hover:translate-y-0"/>
+              <span className="absolute inset-0 translate-y-full bg-black/20 transition group-hover:translate-y-0"/>
             </button>
+
+            <div className="text-center">
+              <a href="#" className="mt-2 inline-block text-sm" style={{ color: ACCENT }}>
+                Нууц үг мартсан уу?
+              </a>
+            </div>
           </form>
 
           {authMode === "login" && (
-            <p className="text-xs text-neutral-400">Нууц үгээ мартсан бол студийн ажилтнаас шинэ шуудан үүсгүүлэх боломжтой.</p>
+            <p className="text-xs text-white"></p>
           )}
         </section>
       </div>
