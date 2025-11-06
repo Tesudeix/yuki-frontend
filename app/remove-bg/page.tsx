@@ -3,24 +3,25 @@
 import React from "react";
 
 export default function RemoveBgPage() {
+  const ENV_NB_KEY = process.env.NEXT_PUBLIC_NB_API_KEY || "";
+  const ENV_NB_ENDPOINT = process.env.NEXT_PUBLIC_NB_ENDPOINT || "";
+  const provider = "nanobanana" as const;
+
   const [status, setStatus] = React.useState<string>("");
   const [inputPreview, setInputPreview] = React.useState<string>("");
   const [resultUrl, setResultUrl] = React.useState<string>("");
   const [backendUrl, setBackendUrl] = React.useState<string>("");
-  const [apiKey, setApiKey] = React.useState<string>("");
+  const [apiKey, setApiKey] = React.useState<string>(ENV_NB_KEY);
   const [product, setProduct] = React.useState<string>("kettle");
-  const [nbUrl, setNbUrl] = React.useState<string>("");
+  const [nbUrl, setNbUrl] = React.useState<string>(ENV_NB_ENDPOINT);
   const [remember, setRemember] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     try {
-      const saved = localStorage.getItem("openai_api_key") || "";
-      if (saved) {
-        setApiKey(saved);
-        setRemember(true);
-      }
+      const saved = localStorage.getItem("nanobanana_api_key") || "";
+      if (!ENV_NB_KEY && saved) { setApiKey(saved); setRemember(true); }
     } catch {}
-  }, []);
+  }, [ENV_NB_KEY]);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,7 +49,7 @@ export default function RemoveBgPage() {
     const data = new FormData();
     data.append("image", input.files[0]);
     if (apiKey) data.append("apiKey", apiKey);
-    data.append("provider", "nanobanana");
+    data.append("provider", provider);
     data.append("product", product || "kettle");
     if (nbUrl) data.append("nbUrl", nbUrl);
 
@@ -82,7 +83,7 @@ export default function RemoveBgPage() {
       <form onSubmit={onSubmit} encType="multipart/form-data">
         <input type="file" name="image" accept="image/*" onChange={onFileChange} required />
         <div style={{ marginTop: 12, fontSize: 14, color: "#555" }}>Provider: Nano Banana (fixed)</div>
-        {provider === "nanobanana" && (
+        {!ENV_NB_ENDPOINT && (
           <div style={{ marginTop: 12 }}>
             <input
               type="text"
@@ -93,44 +94,38 @@ export default function RemoveBgPage() {
             />
           </div>
         )}
-        {provider === "openai" && (
-          <div style={{ marginTop: 12 }}>
-            <input
-              type="text"
-              placeholder="Product (e.g. kettle)"
-              value={product}
-              onChange={(e) => setProduct(e.target.value)}
-              style={{ width: "100%", maxWidth: 420, padding: "0.5rem", border: "1px solid #ddd", borderRadius: 6 }}
-            />
-          </div>
-        )}
+        {/* Product field kept for future providers; hidden by default */}
         <div style={{ marginTop: 12 }}>
-          <input
-            type="password"
-            placeholder="OpenAI API Key (sk-... or sk-proj-...)"
-            value={apiKey}
-            onChange={(e) => {
-              const v = e.target.value;
-              setApiKey(v);
-              try { if (remember) localStorage.setItem("openai_api_key", v); } catch {}
-            }}
-            style={{ width: "100%", maxWidth: 420, padding: "0.5rem", border: "1px solid #ddd", borderRadius: 6 }}
-          />
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setRemember(checked);
-                try {
-                  if (checked) localStorage.setItem("openai_api_key", apiKey || "");
-                  else localStorage.removeItem("openai_api_key");
-                } catch {}
-              }}
-            />
-            Remember API key (stores locally in this browser)
-          </label>
+          {!ENV_NB_KEY && (
+            <>
+              <input
+                type="password"
+                placeholder="Nano Banana API Key"
+                value={apiKey}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setApiKey(v);
+                  try { if (remember) localStorage.setItem("nanobanana_api_key", v); } catch {}
+                }}
+                style={{ width: "100%", maxWidth: 420, padding: "0.5rem", border: "1px solid #ddd", borderRadius: 6 }}
+              />
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setRemember(checked);
+                    try {
+                      if (checked) localStorage.setItem("nanobanana_api_key", apiKey || "");
+                      else localStorage.removeItem("nanobanana_api_key");
+                    } catch {}
+                  }}
+                />
+                Remember API key (stores locally in this browser)
+              </label>
+            </>
+          )}
         </div>
         <div style={{ marginTop: "1rem" }}>
           <button type="submit" style={{ padding: "0.5rem 1rem" }}>Extract Product (Nano Banana)</button>
