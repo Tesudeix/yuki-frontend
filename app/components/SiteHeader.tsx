@@ -110,9 +110,17 @@ export default function SiteHeader() {
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
               >
-                <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white">
-                  {initialsFromName(user?.name || user?.phone || "U")}
-                </div>
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl as string}
+                    alt="Avatar"
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white">
+                    {initialsFromName(user?.name || user?.phone || "U")}
+                  </div>
+                )}
                 <span className="hidden text-sm text-neutral-300 sm:block">{user?.name || user?.phone}</span>
                 <ChevronDownIcon className="h-4 w-4 text-neutral-500" />
               </button>

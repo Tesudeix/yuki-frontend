@@ -7,7 +7,7 @@ import FeedPostCard, { type Post } from "@/app/components/FeedPostCard";
 import PostInput from "@/app/components/PostInput";
 
 export default function ProfilePage() {
-  const { token, hydrated, user } = useAuthContext();
+  const { token, hydrated, user, updateUserLocal } = useAuthContext();
   const router = useRouter();
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,12 +72,89 @@ export default function ProfilePage() {
   const handleShareAdd = (p: Post) => setMyPosts((prev) => [p, ...prev]);
   const handleNewPost = (p: Post) => setMyPosts((prev) => [p, ...prev]);
 
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const onChooseFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!myId) return;
+    setUploading(true);
+    try {
+      // 1) Upload file to backend file mirror
+      const form = new FormData();
+      form.append("file", file);
+      const upRes = await fetch(`${BASE_URL}/upload`, { method: "POST", body: form });
+      const upJson = await upRes.json();
+      const downloadUrl = upJson?.downloadUrl as string | undefined;
+      if (!downloadUrl) throw new Error("Upload failed");
+
+      // 2) Persist avatarUrl to profile in backend (Mongo route)
+      const patchRes = await fetch(`${BASE_URL}/users/profile/avatar`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": myId,
+        },
+        body: JSON.stringify({ avatarUrl: downloadUrl }),
+      });
+      const patchJson = await patchRes.json();
+      if (!patchRes.ok || !patchJson?.success) {
+        throw new Error(patchJson?.error || "Failed to update profile avatar");
+      }
+
+      // 3) Update local user cache for immediate UI feedback
+      updateUserLocal({ avatarUrl: downloadUrl });
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Upload error");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black text-white">
       <div className="mx-auto max-w-3xl p-4 grid gap-5">
-        <header className="grid gap-1">
-          <h1 className="text-2xl font-semibold">My Profile</h1>
-          <p className="text-sm text-neutral-400">{user?.name || user?.phone}</p>
+        <header className="flex items-center gap-4">
+          <div className="relative">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl as string}
+                alt="Avatar"
+                className="h-16 w-16 rounded-full object-cover"
+              />
+            ) : (
+              <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-lg font-bold">
+                {(user?.name || user?.phone || "U").toString().slice(0, 2).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold">My Profile</h1>
+            <p className="text-sm text-neutral-400">{user?.name || user?.phone}</p>
+            <div className="mt-1">
+              <button
+                onClick={onChooseFile}
+                disabled={uploading}
+                className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800 disabled:opacity-60"
+              >
+                {uploading ? "Uploading..." : "Change Avatar"}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={onFileChange}
+              />
+            </div>
+          </div>
         </header>
 
         {token && <PostInput onPost={handleNewPost} />}

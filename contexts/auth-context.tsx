@@ -39,6 +39,7 @@ type AuthContextValue = {
   fetchProfile: () => Promise<ActionResult<AuthenticatedUser>>;
   logout: () => void;
   clearAdmin: () => void;
+  updateUserLocal: (patch: Partial<AuthenticatedUser>) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -290,6 +291,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     persistAdminProfile(null);
   }, [persistAdminProfile, persistAdminToken]);
 
+  const updateUserLocal = useCallback((patch: Partial<AuthenticatedUser>) => {
+    setUser((prev) => {
+      const merged = { ...(prev || ({} as AuthenticatedUser)), ...patch } as AuthenticatedUser;
+      persistUser(merged);
+      return merged;
+    });
+  }, [persistUser]);
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -333,6 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       fetchProfile,
       logout,
       clearAdmin,
+      updateUserLocal,
     }),
     [
       adminLogin,
@@ -347,6 +357,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       register,
       token,
       user,
+      updateUserLocal,
     ],
   );
 

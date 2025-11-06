@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { Download, Image as ImageIcon, Loader2, Upload } from "lucide-react";
 
 export default function HomePage() {
@@ -58,8 +59,13 @@ export default function HomePage() {
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error((errData as any).error || "Ажиллагаа амжилтгүй боллоо");
+        const errData: unknown = await res.json().catch(() => null);
+        let message = "Ажиллагаа амжилтгүй боллоо";
+        if (typeof errData === "object" && errData && "error" in errData) {
+          const val = (errData as Record<string, unknown>).error;
+          if (typeof val === "string") message = val;
+        }
+        throw new Error(message);
       }
 
       const data = await res.json();
@@ -176,11 +182,16 @@ export default function HomePage() {
           <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
             <h3 className="mb-3 text-sm font-medium text-neutral-300">Original</h3>
             <div className="overflow-hidden rounded-lg bg-neutral-950">
-              <img
-                src={originalImage}
-                alt="Original"
-                className="mx-auto max-h-[360px] w-auto object-contain"
-              />
+              <div className="relative h-[360px] w-full">
+                <Image
+                  src={originalImage}
+                  alt="Original"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-contain"
+                  unoptimized
+                />
+              </div>
             </div>
           </div>
         )}
@@ -194,11 +205,16 @@ export default function HomePage() {
               </div>
             )}
             {processedImage ? (
-              <img
-                src={processedImage}
-                alt="Processed"
-                className="mx-auto max-h-[360px] w-auto object-contain"
-              />
+              <div className="relative h-[360px] w-full">
+                <Image
+                  src={processedImage}
+                  alt="Processed"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-contain"
+                  unoptimized
+                />
+              </div>
             ) : (
               <div className="grid h-[360px] place-items-center text-neutral-500">
                 <div className="flex items-center gap-2 text-sm">

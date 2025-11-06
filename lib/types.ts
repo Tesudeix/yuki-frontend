@@ -11,6 +11,7 @@ export type AuthenticatedUserBase = {
   name?: string | null;
   email?: string | null;
   role?: string | null;
+  avatarUrl?: string | null;
   age?: number | null;
   lastVerifiedAt?: string | null;
   lastLoginAt?: string | null;
