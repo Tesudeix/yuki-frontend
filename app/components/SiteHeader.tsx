@@ -23,6 +23,7 @@ export default function SiteHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const activeStartsWith = useMemo(
@@ -42,6 +43,11 @@ export default function SiteHeader() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [menuOpen]);
 
+  useEffect(() => {
+    // Close mobile menu when route changes
+    setMobileOpen(false);
+  }, [pathname]);
+
   const handleLogout = () => {
     logout();
     setMenuOpen(false);
@@ -52,9 +58,20 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-neutral-800 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/60">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="mr-1 inline-flex items-center justify-center rounded-md p-1.5 text-neutral-300 hover:bg-neutral-800 md:hidden"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Open menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+          >
+            {mobileOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+          </button>
+
           <Link href="/feed" className="inline-flex items-center gap-2 font-semibold text-white">
             <LogoIcon />
-            <span className="hidden sm:inline">Yuki Social</span>
+            <span>AI Clan</span>
           </Link>
           <nav className="ml-3 hidden items-center gap-1 md:flex">
             {navLinks.map((link) => (
@@ -131,6 +148,57 @@ export default function SiteHeader() {
           )}
         </div>
       </div>
+
+      {/* Mobile menu panel */}
+      {mobileOpen && (
+        <div id="mobile-menu" className="md:hidden">
+          <div className="border-b border-neutral-800 bg-neutral-900/95 px-4 py-2">
+            <nav className="grid gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={
+                    "rounded-md px-3 py-2 text-sm transition-colors hover:bg-neutral-800 " +
+                    (activeStartsWith(link.href) ? "bg-neutral-800 text-white" : "text-neutral-300")
+                  }
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              {!hydrated ? (
+                <div className="h-8 w-full animate-pulse rounded-md bg-neutral-800" />
+              ) : token ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="rounded-md px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    className="rounded-md px-3 py-2 text-left text-sm text-red-400 hover:bg-neutral-800"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/auth"
+                  className="rounded-md bg-white px-3 py-2 text-center text-sm font-medium text-black hover:opacity-90"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Sign in
+                </Link>
+              )}
+            </nav>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -178,3 +246,30 @@ function ChevronDownIcon({ className = "" }: { className?: string }) {
   );
 }
 
+function MenuIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h15a1.5 1.5 0 0 1 0 3h-15A1.5 1.5 0 0 1 3 7.5Zm0 9A1.5 1.5 0 0 1 4.5 15h15a1.5 1.5 0 0 1 0 3h-15A1.5 1.5 0 0 1 3 16.5Z" />
+    </svg>
+  );
+}
+
+function XIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path d="M6.225 4.811a1 1 0 0 1 1.414 0L12 9.172l4.361-4.361a1 1 0 1 1 1.414 1.414L13.414 10.586l4.361 4.361a1 1 0 1 1-1.414 1.414L12 12l-4.361 4.361a1 1 0 0 1-1.414-1.414l4.361-4.361-4.361-4.361a1 1 0 0 1 0-1.414Z" />
+    </svg>
+  );
+}
