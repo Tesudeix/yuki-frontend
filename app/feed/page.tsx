@@ -78,7 +78,7 @@ export default function FeedPage() {
 
           {token && <PostInput onPost={addNewPost} />}
 
-          <section className="grid gap-3">
+          <section className="grid gap-4">
             {posts.map((post) => (
               <FeedPostCard
                 key={post._id}

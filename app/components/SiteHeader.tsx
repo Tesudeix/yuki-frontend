@@ -8,10 +8,11 @@ import { useAuthContext } from "@/contexts/auth-context";
 type NavLink = { href: string; label: string };
 
 const navLinks: NavLink[] = [
-  { href: "/", label: "Home" },
-  { href: "/feed", label: "Blog" },
-  { href: "/categories", label: "Categories" },
-  { href: "/about", label: "About" },
+  { href: "/", label: "Нүүр" },
+  { href: "/feed", label: "Блог" },
+  { href: "/categories/ai-agents", label: "Agents" },
+  { href: "/classroom", label: "Хичээл" },
+  { href: "/about", label: "Тухай" },
 ];
 
 const initialsFromName = (value: string): string => {
@@ -57,14 +58,14 @@ export default function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b  bg-black ">
+    <header className="sticky top-0 z-50 bg-black">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <button
             type="button"
             className="mr-1 inline-flex items-center justify-center rounded-md p-1.5 text-neutral-300 hover:bg-neutral-800 md:hidden"
             onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Open menu"
+            aria-label="Цэс нээх"
             aria-expanded={mobileOpen}
             aria-controls="mobile-menu"
           >
@@ -91,14 +92,6 @@ export default function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="relative hidden sm:block">
-            <SearchIcon className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
-            <input
-              type="search"
-              placeholder="Search"
-              className="w-56 rounded-md border border-neutral-800 bg-neutral-900 py-1.5 pl-8 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none ring-0 focus:border-neutral-700 focus:ring-2 focus:ring-neutral-700"
-            />
-          </div>
 
           {!hydrated ? (
             <div className="h-8 w-24 animate-pulse rounded-md bg-neutral-800" />
@@ -136,13 +129,13 @@ export default function SiteHeader() {
                     className="block px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Profile
+                    Профайл
                   </Link>
                   <button
                     className="block w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-neutral-800"
                     onClick={handleLogout}
                   >
-                    Logout
+                    Гарах
                   </button>
                 </div>
               )}
@@ -152,7 +145,7 @@ export default function SiteHeader() {
               href="/auth"
               className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-black transition-opacity hover:opacity-90"
             >
-              Sign in
+              Нэвтрэх
             </Link>
           )}
         </div>
@@ -186,13 +179,13 @@ export default function SiteHeader() {
                     className="rounded-md px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
                     onClick={() => setMobileOpen(false)}
                   >
-                    Profile
+                    Профайл
                   </Link>
                   <button
                     className="rounded-md px-3 py-2 text-left text-sm text-red-400 hover:bg-neutral-800"
                     onClick={handleLogout}
                   >
-                    Logout
+                    Гарах
                   </button>
                 </>
               ) : (
@@ -201,7 +194,7 @@ export default function SiteHeader() {
                   className="rounded-md bg-white px-3 py-2 text-center text-sm font-medium text-black hover:opacity-90"
                   onClick={() => setMobileOpen(false)}
                 >
-                  Sign in
+                  Нэвтрэх
                 </Link>
               )}
             </nav>
@@ -223,20 +216,6 @@ function LogoIcon() {
     >
       <path d="M12 2a10 10 0 1 0 10 10A10.012 10.012 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8Z" />
       <path d="M12 6a6 6 0 0 0-6 6 1 1 0 0 0 2 0 4 4 0 1 1 4 4 1 1 0 0 0 0 2 6 6 0 0 0 0-12Z" />
-    </svg>
-  );
-}
-
-function SearchIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden
-    >
-      <path d="M21.53 20.47l-4.807-4.807A7.5 7.5 0 1 0 10.5 18a7.45 7.45 0 0 0 4.663-1.607l4.807 4.807a.75.75 0 1 0 1.06-1.06zM4.5 10.5a6 6 0 1 1 6 6 6.007 6.007 0 0 1-6-6z" />
     </svg>
   );
 }

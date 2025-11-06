@@ -2,8 +2,9 @@
 import React, { useMemo, useState } from "react";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL, UPLOADS_URL } from "../../lib/config";
+import { ADMIN_PHONE } from "@/lib/constants";
 
-type User = { _id?: string; id?: string; name?: string; phone?: string };
+type User = { _id?: string; id?: string; name?: string; phone?: string; avatarUrl?: string };
 type Reply = { _id: string; user?: User; content: string };
 type Comment = { _id: string; user?: User; content: string; replies?: Reply[] };
 export type Post = {
@@ -55,6 +56,8 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
     if (!currentUserId || !ownerId) return false;
     return currentUserId === ownerId;
   }, [currentUserId, ownerId]);
+
+  const isSuperAdmin = (user?.phone && user.phone === ADMIN_PHONE) || false;
 
   const hasLiked = useMemo(() => {
     const me = currentUserId;
@@ -166,11 +169,28 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
 
   const letter = (state.user?.name || state.user?.phone || "U").slice(0, 1).toUpperCase();
 
+  const formatUtc = (iso: string) => {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const yyyy = d.getUTCFullYear();
+    const mm = pad(d.getUTCMonth() + 1);
+    const dd = pad(d.getUTCDate());
+    const hh = pad(d.getUTCHours());
+    const mi = pad(d.getUTCMinutes());
+    const ss = pad(d.getUTCSeconds());
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss} UTC`;
+  };
+
   return (
-    <article className="bg-[#111111] rounded-xl p-4 grid gap-3">
-      <header className="grid grid-cols-[auto,1fr,auto] gap-3 items-start">
-        <div className="w-10 h-10 rounded-md bg-neutral-800 text-white grid place-items-center text-sm font-semibold">
-          {letter}
+    <article className="bg-[#111111] rounded-xl p-4 grid gap-3 border border-neutral-800">
+      <header className="grid grid-cols-[auto,1fr] gap-3 items-start">
+        <div className="w-10 h-10 rounded-full overflow-hidden grid place-items-center bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white text-sm font-semibold">
+          {state.user?.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={state.user.avatarUrl as string} alt="avatar" className="w-full h-full object-cover" />
+          ) : (
+            <span>{letter}</span>
+          )}
         </div>
         <div className="grid">
           <div className="flex items-center gap-2">
@@ -178,26 +198,13 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
               {state.user?.name || state.user?.phone || "User"}
             </span>
             <span className="text-xs text-neutral-400">
-              {new Date(state.createdAt).toLocaleString()}
+              {formatUtc(state.createdAt)}
             </span>
           </div>
           {state.sharedFrom && (
-            <div className="text-xs text-neutral-400">Shared from {state.sharedFrom.user?.name || state.sharedFrom.user?.phone}</div>
+            <div className="text-xs text-neutral-400">Хуваалцсан: {state.sharedFrom.user?.name || state.sharedFrom.user?.phone}</div>
           )}
         </div>
-        {isOwner && (
-          <div className="relative">
-            <button className="px-2 py-1 text-xs text-neutral-300" onClick={() => setMenuOpen((o) => !o)} aria-label="Post options">
-              •••
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 mt-1 bg-[#1b1b1b] border border-neutral-700 rounded-md shadow overflow-hidden">
-                <button className="block w-full px-3 py-2 text-left text-sm hover:bg-neutral-700" onClick={handleEdit}>Edit</button>
-                <button className="block w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-neutral-700" onClick={handleDelete}>Delete</button>
-              </div>
-            )}
-          </div>
-        )}
       </header>
 
       {display.content && (
@@ -242,9 +249,9 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
                   value={replyTexts[c._id] || ""}
                   onChange={(e) => setReplyTexts((s) => ({ ...s, [c._id]: e.target.value }))}
                   className="flex-1 p-1 bg-[#1b1b1b] rounded"
-                  placeholder="Reply..."
+                  placeholder="Хариу бичих..."
                 />
-                <button className="text-xs underline" onClick={() => handleReply(c._id)}>Reply</button>
+                <button className="text-xs underline" onClick={() => handleReply(c._id)}>Хариулах</button>
               </div>
             </div>
           ))}
@@ -253,11 +260,21 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               className="flex-1 p-2 bg-[#1b1b1b] rounded"
-              placeholder="Add a comment..."
+              placeholder="Сэтгэгдэл нэмэх..."
             />
-            <button className="underline text-sm" onClick={handleComment}>Post</button>
+            <button className="underline text-sm" onClick={handleComment}>Илгээх</button>
           </div>
         </section>
+      )}
+      {isSuperAdmin && (
+        <div className="pt-2">
+          <button
+            onClick={handleDelete}
+            className="rounded-md border border-red-700 px-3 py-1 text-xs text-red-400 hover:bg-red-950"
+          >
+            Постыг устгах
+          </button>
+        </div>
       )}
     </article>
   );

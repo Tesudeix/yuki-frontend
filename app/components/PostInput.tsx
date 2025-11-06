@@ -52,7 +52,7 @@ export default function PostInput({ onPost }: Props) {
     <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="grid gap-2 bg-[#111111] p-4 rounded">
       <input ref={fileRef} type="file" className="hidden" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
       <textarea
-        placeholder="What's happening?"
+        placeholder="Юу болж байна?"
         className="w-full p-2 rounded bg-[#1b1b1b] text-white"
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -61,13 +61,13 @@ export default function PostInput({ onPost }: Props) {
       {previewUrl && (
         <div className="relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={previewUrl} alt="preview" className="rounded max-h-64 object-cover" />
+          <img src={previewUrl} alt="урьдчилж харах" className="rounded max-h-64 object-cover" />
           <button className="absolute top-1 right-1 bg-black/60 text-white rounded px-2" type="button" onClick={() => setImageFile(null)}>×</button>
         </div>
       )}
       <div className="flex items-center gap-2 justify-end">
-        <button type="button" className="px-3 py-1 border rounded" onClick={() => fileRef.current?.click()}>Add image</button>
-        <button type="submit" disabled={posting || (!content.trim() && !imageFile)} className="px-4 py-1 bg-blue-600 text-white rounded disabled:opacity-50">Post</button>
+        <button type="button" className="px-3 py-1 border rounded" onClick={() => fileRef.current?.click()}>Зураг нэмэх</button>
+        <button type="submit" disabled={posting || (!content.trim() && !imageFile)} className="px-4 py-1 bg-blue-600 text-white rounded disabled:opacity-50">Нийтлэх</button>
       </div>
     </form>
   );

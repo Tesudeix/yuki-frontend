@@ -4,7 +4,8 @@ import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Download, Image as ImageIcon, Loader2, Upload } from "lucide-react";
 
-export default function HomePage() {
+export default function
+    HomePage() {
   const [file, setFile] = useState<File | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
@@ -40,7 +41,7 @@ export default function HomePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      setError("Please select an image first");
+      setError("Эхлээд зураг сонгоно уу");
       return;
     }
 
@@ -75,8 +76,8 @@ export default function HomePage() {
       setProcessedImage(newImageUrl);
       setResultMimeType(mime);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred.");
-    } finally {
+      setError(err instanceof Error ? err.message : "Тодорхойгүй алдаа гарлаа.");
+      } finally {
       setIsLoading(false);
     }
   };
@@ -101,11 +102,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-10 text-white">
       <div className="mb-8 space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Extract Product</h1>
-        <p className="text-sm text-neutral-400">
-          Upload a product photo, then extract it to a clean background.
+        <h1 className="text-2xl font-semibold tracking-tight">Бүтээгдэхүүн ялгах</h1>
+        <p className="text-sm text-white">
+          Бүтээгдэхүүний зургаа байршуулаад цэвэр дэвсгэр дээр тусгаарлаарай.
         </p>
       </div>
 
@@ -114,7 +115,7 @@ export default function HomePage() {
           htmlFor="file"
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
-          className="relative flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-neutral-700/60 bg-neutral-900/40 p-8 text-center transition-colors hover:border-neutral-500/80 hover:bg-neutral-900"
+          className="relative flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-neutral-700/60 bg-black p-8 text-center transition-colors hover:border-neutral-500/80 hover:bg-black"
         >
           <input
             id="file"
@@ -126,18 +127,18 @@ export default function HomePage() {
           />
 
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-neutral-800 p-3 text-neutral-300">
+            <div className="rounded-lg bg-black p-3 text-white">
               <Upload size={18} />
             </div>
             <div className="text-left">
-              <p className="text-sm font-medium">Click to upload</p>
-              <p className="text-xs text-neutral-400">or drag and drop PNG/JPG</p>
+              <p className="text-sm font-medium">Дарж зураг байршуулах</p>
+              <p className="text-xs text-white">эсвэл PNG/JPG чирж оруулна уу</p>
             </div>
           </div>
 
           {file && (
-            <div className="mt-4 max-w-full truncate text-xs text-neutral-400">
-              Selected: <span className="text-neutral-300">{file.name}</span>
+            <div className="mt-4 max-w-full truncate text-xs text-white">
+              Сонгосон: <span className="text-white">{file.name}</span>
             </div>
           )}
         </label>
@@ -146,15 +147,16 @@ export default function HomePage() {
           <button
             type="submit"
             disabled={isLoading || !file}
-            className="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm font-medium text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ backgroundColor: "#1080CA", boxShadow: "0 10px 24px -14px rgba(16,128,202,0.8)" }}
           >
             {isLoading ? (
               <>
-                <Loader2 className="animate-spin" size={16} /> Processing
+                <Loader2 className="animate-spin" size={16} /> Боловсруулж байна
               </>
             ) : (
               <>
-                <ImageIcon size={16} /> Extract Product
+                <ImageIcon size={16} /> Бүтээгдэхүүн ялгах
               </>
             )}
           </button>
@@ -163,9 +165,9 @@ export default function HomePage() {
             <button
               type="button"
               onClick={handleDownload}
-              className="inline-flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-200 transition hover:border-neutral-500"
+              className="inline-flex items-center gap-2 rounded-lg border border-neutral-700 bg-black px-4 py-2 text-sm font-medium text-white transition hover:border-neutral-500"
             >
-              <Download size={16} /> Download
+              <Download size={16} /> Татах
             </button>
           )}
         </div>
@@ -179,13 +181,13 @@ export default function HomePage() {
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         {originalImage && (
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
-            <h3 className="mb-3 text-sm font-medium text-neutral-300">Original</h3>
-            <div className="overflow-hidden rounded-lg bg-neutral-950">
+          <div className="rounded-xl border border-neutral-800 bg-black p-4">
+            <h3 className="mb-3 text-sm font-medium text-white">Эх зураг</h3>
+            <div className="overflow-hidden rounded-lg bg-black">
               <div className="relative h-[360px] w-full">
                 <Image
                   src={originalImage}
-                  alt="Original"
+                  alt="Эх зураг"
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-contain"
@@ -196,19 +198,19 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
-          <h3 className="mb-3 text-sm font-medium text-neutral-300">Result</h3>
-          <div className="relative overflow-hidden rounded-lg bg-neutral-950">
+        <div className="rounded-xl border border-neutral-800 bg-black p-4">
+          <h3 className="mb-3 text-sm font-medium text-white">Үр дүн</h3>
+          <div className="relative overflow-hidden rounded-lg bg-black">
             {isLoading && (
-              <div className="absolute inset-0 z-10 grid place-items-center bg-neutral-950/70">
-                <Loader2 className="animate-spin text-neutral-300" size={24} />
+              <div className="absolute inset-0 z-10 grid place-items-center bg-black">
+                <Loader2 className="animate-spin text-white" size={24} />
               </div>
             )}
             {processedImage ? (
               <div className="relative h-[360px] w-full">
                 <Image
                   src={processedImage}
-                  alt="Processed"
+                  alt="Боловсруулсан зураг"
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-contain"
@@ -216,9 +218,9 @@ export default function HomePage() {
                 />
               </div>
             ) : (
-              <div className="grid h-[360px] place-items-center text-neutral-500">
+              <div className="grid h-[360px] place-items-center text-neutral-400">
                 <div className="flex items-center gap-2 text-sm">
-                  <ImageIcon size={16} /> No image yet
+                  <ImageIcon size={16} /> Одоогоор зураг алга
                 </div>
               </div>
             )}

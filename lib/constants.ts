@@ -2,7 +2,8 @@ export const PHONE_REGEX = /^\+\d{9,15}$/;
 
 export const PASSWORD_MIN_LENGTH = 6;
 
-export const ADMIN_PHONE = "+97699113769";
+// Superadmin phone; entering 8-digit local (e.g., 94641031) normalizes to +97694641031
+export const ADMIN_PHONE = "+97694641031";
 
 export const TOKEN_STORAGE_KEY = "yuki.auth.token";
 export const USER_STORAGE_KEY = "yuki.auth.user";
