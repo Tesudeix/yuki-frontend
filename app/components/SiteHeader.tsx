@@ -8,8 +8,10 @@ import { useAuthContext } from "@/contexts/auth-context";
 type NavLink = { href: string; label: string };
 
 const navLinks: NavLink[] = [
-  { href: "/feed", label: "Home" },
-  { href: "/profile", label: "Profile" },
+  { href: "/", label: "Home" },
+  { href: "/feed", label: "Blog" },
+  { href: "/categories", label: "Categories" },
+  { href: "/about", label: "About" },
 ];
 
 const initialsFromName = (value: string): string => {
@@ -69,7 +71,7 @@ export default function SiteHeader() {
             {mobileOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
           </button>
 
-          <Link href="/feed" className="inline-flex items-center gap-2 font-semibold text-white">
+          <Link href="/" className="inline-flex items-center gap-2 font-semibold text-white">
             <span>TESUDEIX</span>
           </Link>
           <nav className="ml-3 hidden items-center gap-1 md:flex">
