@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 
 import { useAuthContext } from "@/contexts/auth-context";
 import { ADMIN_PHONE, PASSWORD_MIN_LENGTH } from "@/lib/constants";
-import { formatDateTime } from "@/lib/date-format";
 import { isValidPhoneInput, normalizePhoneForE164 } from "@/lib/phone";
 import type { AuthMode, MessageDescriptor } from "@/lib/types";
 
@@ -38,7 +37,7 @@ const AuthPage = () => {
     register: registerUser,
     login: loginUser,
     adminLogin,
-    fetchProfile,
+    // fetchProfile,
     logout,
   } = useAuthContext();
 
@@ -65,9 +64,10 @@ const AuthPage = () => {
 
   const isBusy = status !== "idle";
 
-  const lastVerifiedLabel = formatDateTime(user?.lastVerifiedAt);
-  const lastLoginLabel = formatDateTime(user?.lastLoginAt);
-  const lastPasswordResetLabel = formatDateTime(user?.lastPasswordResetAt);
+  // Derived timestamps can be shown in session UI when needed
+  // const lastVerifiedLabel = formatDateTime(user?.lastVerifiedAt);
+  // const lastLoginLabel = formatDateTime(user?.lastLoginAt);
+  // const lastPasswordResetLabel = formatDateTime(user?.lastPasswordResetAt);
 
   const canSubmit = useMemo(() => {
     if (isBusy) {
@@ -180,17 +180,14 @@ const AuthPage = () => {
     }
   };
 
-  const handleFetchProfile = async () => {
-    setStatus("processing");
-    const result = await fetchProfile();
-    setStatus("idle");
-
-    if (result.ok) {
-      setMessage({ tone: "success", text: "Профайл шинэчлэгдлээ." });
-    } else {
-      setMessage({ tone: "error", text: result.error });
-    }
-  };
+  // Uncomment to expose a manual profile refresh action in the UI
+  // const handleFetchProfile = async () => {
+  //   setStatus("processing");
+  //   const result = await fetchProfile();
+  //   setStatus("idle");
+  //   if (result.ok) setMessage({ tone: "success", text: "Профайл шинэчлэгдлээ." });
+  //   else setMessage({ tone: "error", text: result.error });
+  // };
 
   const handleLogout = () => {
     logout();

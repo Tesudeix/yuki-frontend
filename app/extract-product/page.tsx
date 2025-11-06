@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export default function HomePage() {
   const [file, setFile] = useState<File | null>(null);
@@ -75,13 +76,13 @@ export default function HomePage() {
           {originalImage && (
               <div>
                 <h3>Original</h3>
-                <img src={originalImage} alt="Original" style={{ maxWidth: "300px" }} />
+                <Image src={originalImage} alt="Original" width={300} height={300} style={{ height: "auto", maxWidth: "300px" }} unoptimized />
               </div>
           )}
           {processedImage && (
               <div>
                 <h3>Extracted (White Background)</h3>
-                <img src={processedImage} alt="Processed" style={{ maxWidth: "300px", border: "1px solid #ccc" }} />
+                <Image src={processedImage} alt="Processed" width={300} height={300} style={{ height: "auto", maxWidth: "300px", border: "1px solid #ccc" }} unoptimized />
               </div>
           )}
         </div>

@@ -41,8 +41,9 @@ export default function CodeOptimizerPage() {
       setOptimized(json.optimizedCode || "");
       setNotes(json.notes || "");
       setStatus("Done.");
-    } catch (err: any) {
-      setStatus(err?.message || "Request failed");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Request failed";
+      setStatus(message);
     }
   };
 
@@ -122,4 +123,3 @@ export default function CodeOptimizerPage() {
     </div>
   );
 }
-

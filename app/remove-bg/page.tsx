@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 export default function RemoveBgPage() {
   const ENV_NB_KEY = process.env.NEXT_PUBLIC_NB_API_KEY || "";
@@ -12,7 +13,7 @@ export default function RemoveBgPage() {
   const [resultUrl, setResultUrl] = React.useState<string>("");
   const [backendUrl, setBackendUrl] = React.useState<string>("");
   const [apiKey, setApiKey] = React.useState<string>(ENV_NB_KEY);
-  const [product, setProduct] = React.useState<string>("kettle");
+  const product = "kettle";
   const [nbUrl, setNbUrl] = React.useState<string>(ENV_NB_ENDPOINT);
   const [remember, setRemember] = React.useState<boolean>(false);
 
@@ -56,20 +57,22 @@ export default function RemoveBgPage() {
     try {
       const res = await fetch(`/api-proxy/image/remove-background`, { method: "POST", body: data });
       const text = await res.text();
-      let json: any = undefined;
+      let json: unknown = undefined;
       try { json = text ? JSON.parse(text) : undefined; } catch {}
-      if (!res.ok || !json?.success) {
-        setStatus(json?.error || json?.message || `Failed (${res.status})`);
+      const payload = (json && typeof json === "object" ? (json as Record<string, unknown>) : undefined) || undefined;
+      if (!res.ok || !(payload?.success as boolean | undefined)) {
+        const errMsg = (payload?.error as string | undefined) || (payload?.message as string | undefined) || `Failed (${res.status})`;
+        setStatus(errMsg);
         return;
       }
-      const raw = String(json.downloadUrl || json.file || "");
+      const raw = String((payload?.downloadUrl as string | undefined) || (payload?.file as string | undefined) || "");
       try {
         const u = new URL(raw, window.location.origin);
         setResultUrl(u.pathname);
       } catch {
         setResultUrl(raw);
       }
-      if (json.downloadUrl && typeof json.downloadUrl === "string") setBackendUrl(String(json.downloadUrl));
+      if (payload?.downloadUrl && typeof payload.downloadUrl === "string") setBackendUrl(String(payload.downloadUrl));
       setStatus("Done.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Request failed";
@@ -139,7 +142,7 @@ export default function RemoveBgPage() {
         <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 8 }}>
           <div style={{ fontWeight: 600, marginBottom: 6 }}>Input</div>
           {inputPreview ? (
-            <img src={inputPreview} alt="input" style={{ maxWidth: "100%", height: "auto" }} />
+            <Image src={inputPreview} alt="input" width={600} height={400} style={{ width: "100%", height: "auto" }} unoptimized />
           ) : (
             <div style={{ color: "#666" }}>No image selected.</div>
           )}
@@ -149,7 +152,7 @@ export default function RemoveBgPage() {
           {resultUrl ? (
             <>
               <a href={resultUrl} target="_blank" rel="noreferrer">
-                <img src={resultUrl} alt="result" style={{ maxWidth: "100%", height: "auto" }} />
+                <Image src={resultUrl} alt="result" width={600} height={400} style={{ width: "100%", height: "auto" }} unoptimized />
               </a>
               {backendUrl && backendUrl !== resultUrl && (
                 <div style={{ marginTop: 8, fontSize: "0.9rem" }}>

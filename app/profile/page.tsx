@@ -15,7 +15,16 @@ export default function ProfilePage() {
   const [page, setPage] = useState(1);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const myId = (user as any)?.id || (user as any)?._id || "";
+  const getId = (u: unknown): string => {
+    if (!u || typeof u !== "object") return "";
+    const obj = u as Record<string, unknown>;
+    const id = obj.id;
+    const _id = obj._id;
+    if (typeof id === "string") return id;
+    if (typeof _id === "string") return _id;
+    return "";
+  };
+  const myId = getId(user);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -33,7 +42,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (Array.isArray(data)) {
         const mine = data.filter((post: Post) => {
-          const owner = (post?.user as any)?.id || (post?.user as any)?._id || "";
+          const owner = getId(post?.user);
           return owner && owner === myId;
         });
         setMyPosts((prev) => (p === 1 ? mine : [...prev, ...mine]));
@@ -61,7 +70,7 @@ export default function ProfilePage() {
 
   const handleDelete = (id: string) => setMyPosts((prev) => prev.filter((p) => p._id !== id));
   const handleShareAdd = (p: Post) => setMyPosts((prev) => [p, ...prev]);
-  const handleNewPost = (p: any) => setMyPosts((prev) => [p as Post, ...prev]);
+  const handleNewPost = (p: Post) => setMyPosts((prev) => [p, ...prev]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black text-white">

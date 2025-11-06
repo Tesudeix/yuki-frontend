@@ -46,11 +46,17 @@ export async function POST(req: NextRequest) {
 
         // Type guards to narrow SDK union types safely
         const hasInlineData = (p: unknown): p is { inlineData: { data: string; mimeType: string } } => {
-            return !!p && typeof p === "object" && "inlineData" in p && !!(p as any).inlineData &&
-                typeof (p as any).inlineData.data === "string" && typeof (p as any).inlineData.mimeType === "string";
+            if (!p || typeof p !== "object") return false;
+            const obj = p as Record<string, unknown>;
+            const inline = obj.inlineData as unknown;
+            if (!inline || typeof inline !== "object") return false;
+            const inlineObj = inline as Record<string, unknown>;
+            return typeof inlineObj.data === "string" && typeof inlineObj.mimeType === "string";
         };
         const hasText = (p: unknown): p is { text: string } => {
-            return !!p && typeof p === "object" && typeof (p as any).text === "string";
+            if (!p || typeof p !== "object") return false;
+            const obj = p as Record<string, unknown>;
+            return typeof obj.text === "string";
         };
 
         // Refined handling of first returned part

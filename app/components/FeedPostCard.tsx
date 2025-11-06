@@ -24,7 +24,15 @@ type Props = {
   onShareAdd?: (p: Post) => void;
 };
 
-const getUserId = (u?: User | null) => (u?.id || u?._id || "");
+const getUserId = (u: unknown): string => {
+  if (!u || typeof u !== "object") return "";
+  const obj = u as Record<string, unknown>;
+  const id = obj.id;
+  const _id = obj._id;
+  if (typeof id === "string") return id;
+  if (typeof _id === "string") return _id;
+  return "";
+};
 
 export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
   const { token, user } = useAuthContext();
@@ -37,7 +45,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
 
   const display = state.sharedFrom || state;
   const ownerId = getUserId(state.user);
-  const currentUserId = getUserId(user as any);
+  const currentUserId = getUserId(user);
 
   const likeCount = state.likes?.length || 0;
   const commentCount = state.comments?.length || 0;
@@ -51,7 +59,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
   const hasLiked = useMemo(() => {
     const me = currentUserId;
     if (!me) return false;
-    return (state.likes || []).some((l: any) => (typeof l === "string" ? l === me : getUserId(l) === me));
+    return (state.likes || []).some((l: string | User) => (typeof l === "string" ? l === me : getUserId(l) === me));
   }, [currentUserId, state.likes]);
 
   const handleLike = async () => {

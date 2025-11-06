@@ -2,8 +2,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL } from "../../lib/config";
+import type { Post } from "./FeedPostCard";
 
-type Props = { onPost?: (post: any) => void };
+type Props = { onPost?: (post: Post) => void };
 
 export default function PostInput({ onPost }: Props) {
   const { token, hydrated } = useAuthContext();
