@@ -70,7 +70,6 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black text-white">
       <div className="mx-auto max-w-6xl p-4 grid gap-4 md:grid-cols-[240px,minmax(0,1fr)] lg:grid-cols-[240px,minmax(0,1fr),300px]">
-        <LeftSidebar />
 
         <main className="grid gap-4">
           <header className="flex items-center justify-between">
@@ -92,8 +91,6 @@ export default function FeedPage() {
             <div ref={loadMoreRef} />
           </section>
         </main>
-
-        <RightSidebar />
       </div>
     </div>
   );
