@@ -7,6 +7,8 @@ type Item = { id: string; text: string };
 
 const truncate = (t: string, n = 80) => (t.length > n ? `${t.slice(0, n - 1)}…` : t);
 
+type PostLite = { _id: string; content?: string | null };
+
 export default function ShippedMarquee() {
   const [items, setItems] = useState<Item[]>([]);
 
@@ -18,10 +20,10 @@ export default function ShippedMarquee() {
         url.searchParams.set("page", "1");
         url.searchParams.set("limit", "12");
         const res = await fetch(url.toString(), { cache: "no-store" });
-        const data = await res.json();
+        const data = (await res.json()) as unknown;
         if (!Array.isArray(data)) return;
-        const mapped: Item[] = data
-          .map((p: any) => ({ id: String(p._id), text: truncate(String(p.content || "Untitled"), 100) }))
+        const mapped: Item[] = (data as PostLite[])
+          .map((p) => ({ id: String(p._id), text: truncate(String(p.content || "Untitled"), 100) }))
           .filter((i: Item) => Boolean(i.text));
         if (!cancelled) setItems(mapped.slice(0, 12));
       } catch {

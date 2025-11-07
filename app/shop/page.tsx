@@ -57,8 +57,9 @@ export default function ShopPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error((data as any)?.error || `HTTP ${res.status}`);
+        const err = (await res.json().catch(() => ({}))) as { error?: unknown };
+        const message = typeof err.error === "string" ? err.error : undefined;
+        throw new Error(message ?? `HTTP ${res.status}`);
       }
       setProducts((prev) => prev.filter((p) => p._id !== id));
     } catch (e) {

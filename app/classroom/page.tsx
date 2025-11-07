@@ -27,10 +27,7 @@ const ytIdFromUrl = (url: string) => {
 export default function ClassroomPage() {
   const { user, token } = useAuthContext();
   const router = useRouter();
-  const isAdmin = useMemo(
-    () => Boolean((user?.phone && user.phone === ADMIN_PHONE) || (user as AuthenticatedUser | null)?.classroomAccess || user?.role === "admin"),
-    [user],
-  );
+  // const isAdmin previously used for broader controls; now superadmin-only actions are enabled
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selected, setSelected] = useState<Lesson | null>(null);

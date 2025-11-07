@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { BASE_URL } from "@/lib/config";
 import { useAuthContext } from "@/contexts/auth-context";
@@ -14,7 +14,7 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/users/members`);
@@ -29,13 +29,13 @@ export default function MembersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [q]);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
   useEffect(() => {
     const h = setInterval(load, 10000);
     return () => clearInterval(h);
-  }, [q]);
+  }, [load]);
 
   const filtered = useMemo(() => members, [members]);
 
