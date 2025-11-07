@@ -64,6 +64,8 @@ const AdminPage = () => {
   const [invites, setInvites] = useState<{ code: string; days: number; usedAt?: string | null }[]>([]);
   const [inviteCount, setInviteCount] = useState("5");
   const [inviteDays, setInviteDays] = useState("30");
+  const [members, setMembers] = useState<{ id: string; name?: string | null; phone?: string | null; classroomAccess?: boolean; membershipExpiresAt?: string | null }[]>([]);
+  const [memberQuery, setMemberQuery] = useState("");
 
   const resolveError = useCallback((payload: Parameters<typeof resolveErrorMessage>[0], fallback: string) => {
     return resolveErrorMessage(payload, fallback);
@@ -115,6 +117,19 @@ const AdminPage = () => {
         const inv = await apiRequest<{ invites: { code: string; days: number; usedAt?: string | null }[] }>("/users/admin/invites?status=unused", { method: "GET", headers });
         if (isSuccess(inv)) setInvites(inv.invites || []);
       } catch { /* ignore */ }
+
+
+      // Fetch members list (public list used)
+      try {
+        const params = new URLSearchParams();
+        params.set("limit", "200");
+        if (memberQuery.trim()) params.set("q", memberQuery.trim());
+        const resMembers = await fetch(`${window.location.origin}/users/members?${params.toString()}`, { cache: "no-store" });
+        const dataMembers = await resMembers.json().catch(() => ({}));
+        if (resMembers.ok && Array.isArray(dataMembers.members)) {
+          setMembers(dataMembers.members as any);
+        }
+      } catch {}
 
       setAdminLoading(false);
     },
