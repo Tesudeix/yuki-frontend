@@ -4,14 +4,18 @@ import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL } from "../../lib/config";
 import type { Post } from "./FeedPostCard";
 
-type Props = { onPost?: (post: Post) => void };
+type Props = { onPost?: (post: Post) => void; initialCategory?: "General" | "News" | "Tools" | "Tasks" };
 
-export default function PostInput({ onPost }: Props) {
+export default function PostInput({ onPost, initialCategory }: Props) {
   const { token, hydrated } = useAuthContext();
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  const [category, setCategory] = useState<"General" | "News" | "Tools" | "Tasks">(initialCategory || "General");
+  useEffect(() => {
+    if (initialCategory) setCategory(initialCategory);
+  }, [initialCategory]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,6 +32,7 @@ export default function PostInput({ onPost }: Props) {
       setPosting(true);
       const fd = new FormData();
       fd.append("content", content);
+      fd.append("category", category);
       if (imageFile) fd.append("image", imageFile);
       const res = await fetch(`${BASE_URL}/api/posts`, {
         method: "POST",
@@ -49,7 +54,7 @@ export default function PostInput({ onPost }: Props) {
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="grid gap-2 bg-[#111111] p-4 rounded">
+    <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="grid gap-3 bg-[#111111] p-4 rounded">
       <input ref={fileRef} type="file" className="hidden" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
       <textarea
         placeholder="Юу болж байна?"
@@ -65,6 +70,21 @@ export default function PostInput({ onPost }: Props) {
           <button className="absolute top-1 right-1 bg-black/60 text-white rounded px-2" type="button" onClick={() => setImageFile(null)}>×</button>
         </div>
       )}
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="text-neutral-400">Ангилал:</span>
+        <div className="flex flex-wrap gap-2">
+          {(["General","News","Tools","Tasks"] as const).map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCategory(c)}
+              className={`rounded px-2 py-1 border ${category === c ? "bg-[#1080CA] text-white border-[#1080CA]" : "border-neutral-800 text-neutral-300"}`}
+            >
+              {({ General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="flex items-center gap-2 justify-end">
         <button type="button" className="px-3 py-1 border rounded" onClick={() => fileRef.current?.click()}>Зураг нэмэх</button>
         <button type="submit" disabled={posting || (!content.trim() && !imageFile)} className="px-4 py-1 bg-blue-600 text-white rounded disabled:opacity-50">Нийтлэх</button>

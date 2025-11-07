@@ -50,6 +50,7 @@ const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "processing">("idle");
   const [message, setMessage] = useState<MessageDescriptor | null>(null);
 
@@ -95,8 +96,12 @@ const AuthPage = () => {
       return false;
     }
 
+    if (authMode === "register" && !inviteCode.trim()) {
+      return false;
+    }
+
     return true;
-  }, [authMode, confirmPassword, isBusy, password, phone]);
+  }, [authMode, confirmPassword, isBusy, password, phone, inviteCode]);
 
   // Inline error messages
   const phoneError = !isValidPhoneInput(phone) ? "Утасны дугаарыг зөв оруулна уу." : "";
@@ -126,10 +131,15 @@ const AuthPage = () => {
       return;
     }
 
+    if (!inviteCode.trim()) {
+      setMessage({ tone: "error", text: "Invite код шаардлагатай." });
+      return;
+    }
+
     setStatus("submitting");
     setMessage(null);
 
-    const result = await registerUser({ phone: normalizedPhone, password: password.trim(), name: name.trim() || undefined });
+    const result = await registerUser({ phone: normalizedPhone, password: password.trim(), name: name.trim() || undefined, inviteCode: inviteCode.trim() });
     setStatus("idle");
 
     if (result.ok) {
@@ -302,6 +312,32 @@ const AuthPage = () => {
                 <span className="mt-1 block text-xs text-white">Олон улсын код нэмэх шаардлагагүй.</span>
               )}
             </label>
+
+            {authMode === "register" && (
+              <div className="grid gap-2">
+                <label className="block">
+                  <span className="text-sm font-medium text-white">Invite код</span>
+                  <input
+                    className={`${baseInputClass} border-black/80 focus:border-[var(--focus)]`}
+                    style={{ ['--focus']: FOCUS } as React.CSSProperties}
+                    placeholder="Invite code"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    disabled={isBusy}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = process.env.NEXT_PUBLIC_PAYMENT_URL || "/payment";
+                    window.location.href = url;
+                  }}
+                  className="w-full rounded-sm border border-black bg-black px-4 py-2 text-sm text-white hover:border-neutral-700"
+                >
+                  Invite код авах
+                </button>
+              </div>
+            )}
 
             <label className="block">
               <span className="text-sm font-medium text-white">Нууц үг</span>

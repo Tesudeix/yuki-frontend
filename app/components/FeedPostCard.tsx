@@ -13,6 +13,7 @@ export type Post = {
   user?: User;
   content: string;
   image?: string;
+  category?: "General" | "News" | "Tools" | "Tasks";
   likes: (string | User)[];
   comments?: Comment[];
   shares?: number;
@@ -51,7 +52,8 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
   const commentCount = state.comments?.length || 0;
   const shareCount = state.shares || 0;
 
-  // owner check not used in UI, but kept for future logic if needed
+  const ownerId = getUserId(state.user);
+  const isOwner = ownerId && currentUserId && ownerId === currentUserId;
 
   const isSuperAdmin = (user?.phone && user.phone === ADMIN_PHONE) || false;
 
@@ -184,6 +186,11 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
             <span className="text-xs text-neutral-400">
               {formatUtc(state.createdAt)}
             </span>
+            {state.category && (
+              <span className="ml-2 rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] text-neutral-300">
+                {({ General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[state.category]}
+              </span>
+            )}
           </div>
           {state.sharedFrom && (
             <div className="text-xs text-neutral-400">Хуваалцсан: {state.sharedFrom.user?.name || state.sharedFrom.user?.phone}</div>
@@ -252,7 +259,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
           </div>
         </section>
       )}
-      {isSuperAdmin && (
+      {(isSuperAdmin || isOwner) && (
         <div className="pt-2">
           <button
             onClick={handleDelete}

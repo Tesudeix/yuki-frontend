@@ -9,11 +9,12 @@ import { useAuthContext } from "@/contexts/auth-context";
 type NavLink = { href: string; label: string };
 
 const navLinks: NavLink[] = [
-  { href: "/", label: "Нүүр" },
-  { href: "/feed", label: "Блог" },
+  { href: "/", label: "Home" },
+  { href: "/feed", label: "Community" },
   { href: "/categories/ai-agents", label: "Agents" },
-  { href: "/classroom", label: "Хичээл" },
-  { href: "/about", label: "Тухай" },
+  { href: "/shop", label: "Marketplace" },
+  { href: "/classroom", label: "Classroom" },
+  { href: "/members", label: "Members" },
 ];
 
 const initialsFromName = (value: string): string => {
@@ -76,20 +77,20 @@ export default function SiteHeader() {
           <Link href="/" className="inline-flex items-center gap-2 font-semibold text-white">
             <span>TESUDEIX</span>
           </Link>
-          <nav className="ml-3 hidden items-center gap-1 md:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={
-                  "rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-neutral-800 " +
-                  (activeStartsWith(link.href) ? "bg-neutral-800 text-white" : "text-neutral-300")
-                }
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+  <nav className="ml-3 hidden items-center gap-1 md:flex">
+    {navLinks.map((link) => (
+      <Link
+        key={link.href}
+        href={link.href}
+        className={
+          "rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-neutral-800 " +
+          (activeStartsWith(link.href) ? "bg-neutral-800 text-white" : "text-neutral-300")
+        }
+      >
+        {link.label}
+      </Link>
+    ))}
+  </nav>
         </div>
 
         <div className="flex items-center gap-3">
@@ -145,12 +146,20 @@ export default function SiteHeader() {
               )}
             </div>
           ) : (
-            <Link
-              href="/auth"
-              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-black transition-opacity hover:opacity-90"
-            >
-              Нэвтрэх
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/payment"
+                className="rounded-md bg-[#1080CA] px-3 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                JOIN CLAN
+              </Link>
+              <Link
+                href="/auth"
+                className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-black transition-opacity hover:opacity-90"
+              >
+                Нэвтрэх
+              </Link>
+            </div>
           )}
         </div>
       </div>
@@ -193,13 +202,22 @@ export default function SiteHeader() {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/auth"
-                  className="rounded-md bg-white px-3 py-2 text-center text-sm font-medium text-black hover:opacity-90"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Нэвтрэх
-                </Link>
+                <div className="grid gap-2">
+                  <Link
+                    href="/payment"
+                    className="rounded-md bg-[#1080CA] px-3 py-2 text-center text-sm font-semibold text-white hover:opacity-90"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    JOIN CLAN
+                  </Link>
+                  <Link
+                    href="/auth"
+                    className="rounded-md bg-white px-3 py-2 text-center text-sm font-medium text-black hover:opacity-90"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Нэвтрэх
+                  </Link>
+                </div>
               )}
             </nav>
           </div>

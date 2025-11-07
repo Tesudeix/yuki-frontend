@@ -1,11 +1,46 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Download, Image as ImageIcon, Loader2, Upload } from "lucide-react";
 
 export default function
     HomePage() {
+  // Simple invite-code gate for this agent page
+  const ALLOWED_CODES = useMemo(() => ["1fs5", "vdf4"], []);
+  const STORAGE_KEY = "yuki.invite.extractProduct";
+  const [hasAccess, setHasAccess] = useState(false);
+  const [invite, setInvite] = useState("");
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // query param support: ?invite=code
+    const params = new URLSearchParams(window.location.search);
+    const q = (params.get("invite") || "").trim().toLowerCase();
+    const stored = (localStorage.getItem(STORAGE_KEY) || "").trim().toLowerCase();
+    const candidate = q || stored;
+    if (candidate && ALLOWED_CODES.includes(candidate)) {
+      setHasAccess(true);
+      localStorage.setItem(STORAGE_KEY, candidate);
+    }
+  }, [ALLOWED_CODES]);
+
+  const tryEnter = () => {
+    const code = invite.trim().toLowerCase();
+    if (!/^[a-z0-9]{4}$/.test(code)) {
+      setInviteError("4 тэмдэгтийн код оруулна уу");
+      return;
+    }
+    if (!ALLOWED_CODES.includes(code)) {
+      setInviteError("Код буруу байна");
+      return;
+    }
+    setHasAccess(true);
+    setInviteError(null);
+    try { localStorage.setItem(STORAGE_KEY, code); } catch {}
+  };
+
   const [file, setFile] = useState<File | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
@@ -40,6 +75,10 @@ export default function
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasAccess) {
+      setInviteError("Энэ агентыг ашиглахын тулд код шаардлагатай");
+      return;
+    }
     if (!file) {
       setError("Эхлээд зураг сонгоно уу");
       return;
@@ -52,6 +91,10 @@ export default function
 
     const formData = new FormData();
     formData.append("image", file);
+    try {
+      const savedCode = (typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY)) || invite;
+      if (savedCode) formData.append("inviteCode", savedCode);
+    } catch {}
 
     try {
       const res = await fetch("/api/extract-product", {
@@ -102,7 +145,7 @@ export default function
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 text-white">
+    <div className="relative mx-auto max-w-4xl px-4 py-10 text-white">
       <div className="mb-8 space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Бүтээгдэхүүн ялгах</h1>
         <p className="text-sm text-white">
@@ -227,6 +270,40 @@ export default function
           </div>
         </div>
       </div>
+      {/* Invite modal overlay */}
+      {!hasAccess && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-neutral-800 bg-neutral-950 p-5 shadow-xl">
+            <h2 className="text-lg font-semibold text-white">Invite код шаардлагатай</h2>
+            <p className="mt-1 text-sm text-neutral-300">Зөвшөөрөгдсөн 4 тэмдэгтийн код оруулна уу.</p>
+            <div className="mt-4 grid gap-3">
+              <input
+                type="text"
+                inputMode="text"
+                pattern="[A-Za-z0-9]{4}"
+                maxLength={4}
+                value={invite}
+                onChange={(e) => {
+                  setInvite(e.target.value.replace(/\s+/g, "").slice(0, 4));
+                  setInviteError(null);
+                }}
+                placeholder="____"
+                className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-sky-500"
+              />
+              {inviteError && (
+                <div className="text-xs text-rose-400">{inviteError}</div>
+              )}
+              <button
+                type="button"
+                onClick={tryEnter}
+                className="rounded-md bg-[#1080CA] px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
+              >
+                Үргэлжлүүлэх
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
