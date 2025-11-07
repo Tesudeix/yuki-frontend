@@ -61,6 +61,9 @@ const AdminPage = () => {
   const [artistForm, setArtistForm] = useState<AdminArtistForm>(defaultArtistForm);
   const [artistFormMode, setArtistFormMode] = useState<"create" | "edit">("create");
   const [adminLoading, setAdminLoading] = useState(false);
+  const [invites, setInvites] = useState<{ code: string; days: number; usedAt?: string | null }[]>([]);
+  const [inviteCount, setInviteCount] = useState("5");
+  const [inviteDays, setInviteDays] = useState("30");
 
   const resolveError = useCallback((payload: Parameters<typeof resolveErrorMessage>[0], fallback: string) => {
     return resolveErrorMessage(payload, fallback);
@@ -106,6 +109,12 @@ const AdminPage = () => {
       } else {
         setMessage({ tone: "error", text: resolveError(statsRes, "Статистик ачаалахад алдаа гарлаа.") });
       }
+
+      // Fetch invites (unused)
+      try {
+        const inv = await apiRequest<{ invites: { code: string; days: number; usedAt?: string | null }[] }>("/users/admin/invites?status=unused", { method: "GET", headers });
+        if (isSuccess(inv)) setInvites(inv.invites || []);
+      } catch { /* ignore */ }
 
       setAdminLoading(false);
     },
