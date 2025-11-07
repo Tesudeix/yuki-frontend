@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { AuthenticatedUser } from "@/lib/types";
 import { useAuthContext } from "@/contexts/auth-context";
@@ -15,6 +16,7 @@ type Lesson = {
   folder?: string;
   completed?: boolean;
   author?: { username?: string };
+  type?: "youtube" | "file";
 };
 
 const ytIdFromUrl = (url: string) => {
@@ -24,6 +26,7 @@ const ytIdFromUrl = (url: string) => {
 
 export default function ClassroomPage() {
   const { user, token } = useAuthContext();
+  const router = useRouter();
   const isAdmin = useMemo(
     () => Boolean((user?.phone && user.phone === ADMIN_PHONE) || (user as AuthenticatedUser | null)?.classroomAccess || user?.role === "admin"),
     [user],
@@ -39,8 +42,10 @@ export default function ClassroomPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newFolder, setNewFolder] = useState("General");
   const [newDesc, setNewDesc] = useState("");
+  const [mode, setMode] = useState<"youtube" | "file">("youtube");
+  const [file, setFile] = useState<File | null>(null);
 
-  const canSave = newUrl.trim() && newTitle.trim() && newFolder.trim();
+  const canSave = (mode === "youtube" ? Boolean(newUrl.trim()) : Boolean(file)) && Boolean(newTitle.trim()) && Boolean(newFolder.trim());
 
   // Superadmin controls: grant classroom access by phone
   const isSuperAdmin = useMemo(() => Boolean(user?.phone && user.phone === ADMIN_PHONE), [user?.phone]);
@@ -68,9 +73,17 @@ export default function ClassroomPage() {
   };
 
   useEffect(() => {
+    if (!token) {
+      router.push("/auth");
+      return;
+    }
     const run = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/api/lessons`, { cache: "no-store" });
+        const res = await fetch(`${BASE_URL}/api/lessons`, { cache: "no-store", headers: { Authorization: `Bearer ${token}` } });
+        if (res.status === 401) {
+          router.push("/auth");
+          return;
+        }
         if (!res.ok) throw new Error(String(res.status));
         const data = (await res.json()) as Lesson[];
         const withFlags = (Array.isArray(data) ? data : []).map((l) => ({ ...l, completed: Boolean(l.completed) }));
@@ -85,6 +98,7 @@ export default function ClassroomPage() {
             url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             description: "Sample lesson. Connect backend /api/lessons to manage real lessons.",
             folder: "General",
+            type: "youtube",
           },
         ];
         setLessons(sample);
@@ -92,7 +106,7 @@ export default function ClassroomPage() {
       }
     };
     run();
-  }, []);
+  }, [router, token]);
 
   const folders = useMemo(() => Array.from(new Set(lessons.map((l) => l.folder || "General"))), [lessons]);
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({ General: true });
@@ -114,33 +128,57 @@ export default function ClassroomPage() {
   };
 
   const addLesson = async () => {
-    if (!isAdmin || !token || !canSave) return;
+    if (!isSuperAdmin || !token || !canSave) return;
     try {
-      const res = await fetch(`${BASE_URL}/api/lessons`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ url: newUrl, title: newTitle, description: newDesc, folder: newFolder }),
-      });
-      if (!res.ok) {
-        type ApiError = { error?: unknown } & Record<string, unknown>;
-        const err = (await res.json().catch(() => ({} as ApiError))) as ApiError;
-        const message = typeof err.error === "string" ? err.error : undefined;
-        throw new Error(message ?? `HTTP ${res.status}`);
+      if (mode === "file") {
+        if (!file) throw new Error("Select a video file");
+        const form = new FormData();
+        form.set("file", file);
+        form.set("title", newTitle);
+        form.set("description", newDesc);
+        form.set("folder", newFolder);
+        const res = await fetch(`${BASE_URL}/api/lessons/upload`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        });
+        if (!res.ok) {
+          type ApiError = { error?: unknown } & Record<string, unknown>;
+          const err = (await res.json().catch(() => ({} as ApiError))) as ApiError;
+          const message = typeof err.error === "string" ? err.error : undefined;
+          throw new Error(message ?? `HTTP ${res.status}`);
+        }
+        const created = (await res.json()) as Lesson;
+        setLessons((prev) => [...prev, created]);
+        setSelected(created);
+        resetForm();
+      } else {
+        const res = await fetch(`${BASE_URL}/api/lessons`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ url: newUrl, title: newTitle, description: newDesc, folder: newFolder }),
+        });
+        if (!res.ok) {
+          type ApiError = { error?: unknown } & Record<string, unknown>;
+          const err = (await res.json().catch(() => ({} as ApiError))) as ApiError;
+          const message = typeof err.error === "string" ? err.error : undefined;
+          throw new Error(message ?? `HTTP ${res.status}`);
+        }
+        const created = (await res.json()) as Lesson;
+        setLessons((prev) => [...prev, created]);
+        setSelected(created);
+        resetForm();
       }
-      const created = (await res.json()) as Lesson;
-      setLessons((prev) => [...prev, created]);
-      setSelected(created);
-      resetForm();
     } catch (e) {
       alert(`Failed to add lesson: ${e instanceof Error ? e.message : "Unknown error"}`);
     }
   };
 
   const saveLesson = async () => {
-    if (!isAdmin || !token || !editing || !canSave) return;
+    if (!isSuperAdmin || !token || !editing || !canSave) return;
     try {
       const res = await fetch(`${BASE_URL}/api/lessons/${editing._id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ url: newUrl, title: newTitle, description: newDesc, folder: newFolder }),
       });
@@ -160,7 +198,7 @@ export default function ClassroomPage() {
   };
 
   const deleteLesson = async (id: string) => {
-    if (!isAdmin || !token) return;
+    if (!isSuperAdmin || !token) return;
     try {
       const res = await fetch(`${BASE_URL}/api/lessons/${id}`, {
         method: "DELETE",
@@ -195,7 +233,7 @@ export default function ClassroomPage() {
             </button>
           </div>
 
-          {isAdmin && (
+          {isSuperAdmin && (
             <div className="rounded-md border border-neutral-800 bg-neutral-950 p-3">
               <div className="grid gap-2">
                 {isSuperAdmin && (
@@ -225,12 +263,35 @@ export default function ClassroomPage() {
                     </div>
                   </div>
                 )}
-                <input
-                  className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
-                  placeholder="YouTube холбоос"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                />
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    className={`rounded px-2 py-1 ${mode === "youtube" ? "bg-[#1080CA] text-white" : "border border-neutral-700"}`}
+                    onClick={() => setMode("youtube")}
+                  >
+                    YouTube
+                  </button>
+                  <button
+                    className={`rounded px-2 py-1 ${mode === "file" ? "bg-[#1080CA] text-white" : "border border-neutral-700"}`}
+                    onClick={() => setMode("file")}
+                  >
+                    Upload File
+                  </button>
+                </div>
+                {mode === "youtube" ? (
+                  <input
+                    className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                    placeholder="YouTube холбоос"
+                    value={newUrl}
+                    onChange={(e) => setNewUrl(e.target.value)}
+                  />
+                ) : (
+                  <input
+                    className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  />
+                )}
                 <input
                   className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
                   placeholder="Хичээлийн гарчиг"
@@ -249,7 +310,7 @@ export default function ClassroomPage() {
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
                 />
-                {canSave && (
+                {canSave && mode === "youtube" && (
                   <div className="flex items-center gap-3 text-xs text-neutral-400">
                     <Image
                       src={`https://img.youtube.com/vi/${ytIdFromUrl(newUrl)}/hqdefault.jpg`}
@@ -308,7 +369,7 @@ export default function ClassroomPage() {
                           onClick={() => setSelected(l)}
                         >
                           <span className="truncate">{l.title}</span>
-                          {isAdmin && (
+                          {isSuperAdmin && (
                             <span className="shrink-0 space-x-2">
                               <button
                                 className="rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-800"
@@ -345,13 +406,22 @@ export default function ClassroomPage() {
             <div className="space-y-4">
               <h1 className="text-xl font-semibold">{selected.title}</h1>
               <div className="w-full max-w-3xl">
-                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                  <iframe
-                    src={`https://www.youtube.com/embed/${ytIdFromUrl(selected.url)}`}
-                    className="absolute left-0 top-0 h-full w-full rounded-md border border-neutral-800"
-                    allowFullScreen
+                {selected.type === "file" || selected.url.includes("/api/lessons/") ? (
+                  <video
+                    src={`${selected.url}${selected.url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token || "")}`}
+                    className="h-auto w-full rounded-md border border-neutral-800"
+                    controls
+                    preload="metadata"
                   />
-                </div>
+                ) : (
+                  <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${ytIdFromUrl(selected.url)}`}
+                      className="absolute left-0 top-0 h-full w-full rounded-md border border-neutral-800"
+                      allowFullScreen
+                    />
+                  </div>
+                )}
               </div>
               {selected.description && (
                 <p className="max-w-3xl text-sm text-neutral-300">{selected.description}</p>
