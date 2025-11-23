@@ -26,6 +26,19 @@ const nextConfig: NextConfig = {
         source: "/api-proxy/:path*",
         destination: `${backend}/:path*`,
       },
+      // Proxy backend routes used by the frontend auth/admin UIs
+      {
+        source: "/users/:path*",
+        destination: `${backend}/users/:path*`,
+      },
+      {
+        source: "/admin/:path*",
+        destination: `${backend}/admin/:path*`,
+      },
+      {
+        source: "/api/:path*",
+        destination: `${backend}/api/:path*`,
+      },
       // Serve uploaded files through the frontend origin too
       {
         source: "/files/:path*",

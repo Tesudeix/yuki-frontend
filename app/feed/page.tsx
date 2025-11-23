@@ -10,7 +10,7 @@ import { Skeleton } from "@/app/components/Skeleton";
 // import RightSidebar from "@/app/components/RightSidebar";
 
 export default function FeedPage() {
-  const { token, hydrated } = useAuthContext();
+  const { token, hydrated, user } = useAuthContext();
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [page, setPage] = useState(1);
@@ -75,16 +75,26 @@ export default function FeedPage() {
       <div className="mx-auto max-w-6xl p-4 grid gap-4 md:grid-cols-[240px,minmax(0,1fr)] lg:grid-cols-[240px,minmax(0,1fr),300px]">
 
         <main className="grid gap-4">
-          <header className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Home Feed</h1>
-          </header>
+          {/* Top title */}
+          <div className="flex items-center justify-center py-2">
+            <h1 className="text-sm font-semibold text-neutral-400">AI Clan • Feed</h1>
+          </div>
 
-          {/* Categories filter */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Pinned paywall banner */}
+          {user && !user.classroomAccess && (
+            <div className="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm text-neutral-200">
+              <span className="mr-2">📌</span>
+              Community нь Clan гишүүдэд нээлттэй.
+              <a href="/payment" className="ml-2 underline decoration-pink-500 hover:text-white">Clan-д нэгдэх — ₮25,000</a>
+            </div>
+          )}
+
+          {/* Threads-style pill filter bar */}
+          <div className="flex items-center justify-center gap-2 py-1">
             {(["All","General","News","Tools","Tasks"] as const).map((c) => (
               <button
                 key={c}
-                className={`rounded px-2 py-1 text-sm ${category === c ? "bg-[#1080CA] text-white" : "border border-neutral-800 text-neutral-300"}`}
+                className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#e93b68] text-white" : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"}`}
                 onClick={() => setCategory(c)}
               >
                 {({ All: "Бүгд", General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}
@@ -93,7 +103,9 @@ export default function FeedPage() {
           </div>
 
           {token && (
-            <PostInput onPost={addNewPost} initialCategory={(category === "All" ? "General" : category) as "General" | "News" | "Tools" | "Tasks"} />
+            <div id="composer-anchor">
+              <PostInput onPost={addNewPost} initialCategory={(category === "All" ? "General" : category) as "General" | "News" | "Tools" | "Tasks"} />
+            </div>
           )}
 
           <section className="grid gap-4">
@@ -150,6 +162,20 @@ export default function FeedPage() {
             )}
             <div ref={loadMoreRef} />
           </section>
+
+          {/* Floating '+' button */}
+          {token && (
+            <button
+              onClick={() => {
+                const el = document.getElementById("composer-anchor");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-white text-black text-3xl flex items-center justify-center shadow-xl hover:bg-neutral-200"
+              aria-label="Create post"
+            >
+              +
+            </button>
+          )}
         </main>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { MdiCamera, MdiDotsHorizontal } from "@/app/components/icons";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL } from "../../lib/config";
@@ -15,6 +16,7 @@ export default function ProfilePage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [category, setCategory] = useState<"All" | "General" | "News" | "Tools" | "Tasks">("All");
 
   const getId = (u: unknown): string => {
     if (!u || typeof u !== "object") return "";
@@ -39,6 +41,7 @@ export default function ProfilePage() {
       const url = new URL(`${BASE_URL}/api/posts`);
       url.searchParams.set("page", String(p));
       url.searchParams.set("limit", "10");
+      if (category !== "All") url.searchParams.set("category", category);
       const res = await fetch(url.toString(), { cache: "no-store" });
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -52,9 +55,9 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  }, [myId]);
+  }, [myId, category]);
 
-  useEffect(() => { if (myId) fetchPage(1); }, [fetchPage, myId]);
+  useEffect(() => { if (myId) { setPage(1); fetchPage(1); } }, [fetchPage, myId]);
 
   useEffect(() => {
     const obs = new IntersectionObserver((entries) => {
@@ -124,54 +127,92 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black text-white">
       <div className="mx-auto max-w-3xl p-4 grid gap-5">
-        <header className="flex items-center gap-4">
-          <div className="relative">
+        {/* Top title */}
+        <div className="flex items-center justify-center py-2">
+          <h1 className="text-sm font-semibold text-neutral-400">AI Clan • Profile</h1>
+        </div>
+        {/* Profile header styled like feed row */}
+        <header className="w-full border-b border-neutral-800 py-5">
+          <div className="flex items-start gap-3">
+            {/* Avatar */}
             {user?.avatarUrl ? (
               <Image
                 src={user.avatarUrl as string}
                 alt="Avatar"
-                width={64}
-                height={64}
-                className="h-16 w-16 rounded-full object-cover"
+                width={40}
+                height={40}
+                className="rounded-full object-cover"
                 unoptimized
               />
             ) : (
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-lg font-bold">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-sm font-semibold">
                 {(user?.name || user?.phone || "U").toString().slice(0, 2).toUpperCase()}
               </div>
             )}
-          </div>
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-semibold">My Profile</h1>
-            <p className="text-sm text-neutral-400">{user?.name || user?.phone}</p>
-            <div className="mt-1">
-              <button
-                onClick={onChooseFile}
-                disabled={uploading}
-                className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800 disabled:opacity-60"
-              >
-                {uploading ? "Uploading..." : "Change Avatar"}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={onFileChange}
-              />
+
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-white leading-none">{user?.name || user?.phone || "User"}</p>
+                  <p className="text-[13px] text-neutral-500">@{(user?.name || user?.phone || "user").toString().slice(-6)}</p>
+                </div>
+                <button className="text-neutral-500 hover:text-white transition" aria-label="More">
+                  <MdiDotsHorizontal className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  onClick={onChooseFile}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-2 rounded-md border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800 disabled:opacity-60"
+                >
+                  <MdiCamera className="h-4 w-4" />
+                  {uploading ? "Uploading..." : "Зураг солих"}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onFileChange}
+                />
+              </div>
             </div>
           </div>
         </header>
 
-        {token && <PostInput onPost={handleNewPost} />}
+        {/* Pinned banner if not premium */}
+        {user && !user.classroomAccess && (
+          <div className="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm text-neutral-200">
+            <span className="mr-2">📌</span>
+            Community нь Clan гишүүдэд нээлттэй.
+            <a href="/payment" className="ml-2 underline decoration-pink-500 hover:text-white">Clan-д нэгдэх — ₮25,000</a>
+          </div>
+        )}
 
-        <section className="grid gap-3">
+        {/* Threads-style pill filter bar */}
+        <div className="flex items-center justify-center gap-2 py-1">
+          {(["All","General","News","Tools","Tasks"] as const).map((c) => (
+            <button
+              key={c}
+              className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#e93b68] text-white" : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"}`}
+              onClick={() => setCategory(c)}
+            >
+              {({ All: "Бүгд", General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}
+            </button>
+          ))}
+        </div>
+
+        <section className="grid gap-0">
           {myPosts.map((p) => (
             <FeedPostCard key={p._id} post={p} onDelete={handleDelete} onShareAdd={handleShareAdd} />
           ))}
           {loading && <div className="text-center py-4 text-sm text-neutral-400">Loading...</div>}
           <div ref={loadMoreRef} />
         </section>
+
+
       </div>
     </div>
   );

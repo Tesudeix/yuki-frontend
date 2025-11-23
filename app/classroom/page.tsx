@@ -218,6 +218,12 @@ export default function ClassroomPage() {
   return (
     <div className="min-h-screen bg-black text-neutral-100">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-8 md:grid-cols-[300px_1fr]">
+        {/* Paywall banner for non-members */}
+        {!user?.classroomAccess && (
+          <div className="md:col-span-2 rounded-md border border-pink-500/20 bg-pink-500/5 px-4 py-3 text-sm text-neutral-200">
+            Classroom нь Clan гишүүдэд нээлттэй. <a href="/payment" className="ml-2 underline decoration-pink-500 hover:text-white">Clan-д нэгдэх — ₮25,000</a>
+          </div>
+        )}
         {/* Sidebar */}
         <aside className="space-y-4">
           <div className="flex items-center justify-between">

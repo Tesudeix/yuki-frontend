@@ -7,16 +7,17 @@ import type { Post } from "./FeedPostCard";
 type Props = { onPost?: (post: Post) => void; initialCategory?: "General" | "News" | "Tools" | "Tasks" };
 
 export default function PostInput({ onPost, initialCategory }: Props) {
-  const { token, hydrated } = useAuthContext();
+  const { token, hydrated, user } = useAuthContext();
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  // Keep category internal (hidden UI), default to initial or General
   const [category, setCategory] = useState<"General" | "News" | "Tools" | "Tasks">(initialCategory || "General");
-  useEffect(() => {
-    if (initialCategory) setCategory(initialCategory);
-  }, [initialCategory]);
+  useEffect(() => { if (initialCategory) setCategory(initialCategory); }, [initialCategory]);
+
   const fileRef = useRef<HTMLInputElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!imageFile) { setPreviewUrl(null); return; }
@@ -24,6 +25,15 @@ export default function PostInput({ onPost, initialCategory }: Props) {
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
+
+  const autoGrow = () => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useEffect(() => { autoGrow(); }, [content]);
 
   const submit = async () => {
     if (!hydrated || !token) return;
@@ -53,41 +63,61 @@ export default function PostInput({ onPost, initialCategory }: Props) {
     }
   };
 
+  const avatarUrl = typeof user?.avatarUrl === "string" && user.avatarUrl ? user.avatarUrl : "";
+  const initials = (user?.name || user?.phone || "U").toString().slice(0, 2).toUpperCase();
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="grid gap-3 bg-[#111111] p-4 rounded">
-      <input ref={fileRef} type="file" className="hidden" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
-      <textarea
-        placeholder="Юу болж байна?"
-        className="w-full p-2 rounded bg-[#1b1b1b] text-white"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        rows={3}
-      />
-      {previewUrl && (
-        <div className="relative">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={previewUrl} alt="урьдчилж харах" className="rounded max-h-64 object-cover" />
-          <button className="absolute top-1 right-1 bg-black/60 text-white rounded px-2" type="button" onClick={() => setImageFile(null)}>×</button>
+    <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="w-full p-4 border-b border-neutral-800 flex gap-3">
+      {/* Avatar (left) */}
+      {avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={avatarUrl} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
+      ) : (
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white">
+          {initials}
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-neutral-400">Ангилал:</span>
-        <div className="flex flex-wrap gap-2">
-          {(["General","News","Tools","Tasks"] as const).map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCategory(c)}
-              className={`rounded px-2 py-1 border ${category === c ? "bg-[#1080CA] text-white border-[#1080CA]" : "border-neutral-800 text-neutral-300"}`}
-            >
-              {({ General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}
-            </button>
-          ))}
+
+      {/* Composer (right) */}
+      <div className="flex-1">
+        <textarea
+          ref={taRef}
+          placeholder="What's new?"
+          className="w-full bg-transparent text-white placeholder-neutral-500 outline-none resize-none"
+          rows={1}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onInput={autoGrow}
+        />
+
+        {previewUrl && (
+          <div className="relative mt-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewUrl} alt="preview" className="max-h-64 w-auto rounded object-cover" />
+            <button className="absolute top-1 right-1 rounded bg-black/60 px-2 text-white" type="button" onClick={() => setImageFile(null)}>×</button>
+          </div>
+        )}
+
+        <div className="mt-3 flex items-center justify-between">
+          <label className="cursor-pointer text-sm text-neutral-400 hover:text-white">
+            Зураг нэмэх
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            />
+          </label>
+
+          <button
+            type="submit"
+            disabled={posting || (!content.trim() && !imageFile)}
+            className="rounded-full bg-white px-5 py-2 font-semibold text-black hover:bg-neutral-200 disabled:opacity-50"
+          >
+            Нийтлэх
+          </button>
         </div>
-      </div>
-      <div className="flex items-center gap-2 justify-end">
-        <button type="button" className="px-3 py-1 border rounded" onClick={() => fileRef.current?.click()}>Зураг нэмэх</button>
-        <button type="submit" disabled={posting || (!content.trim() && !imageFile)} className="px-4 py-1 bg-blue-600 text-white rounded disabled:opacity-50">Нийтлэх</button>
       </div>
     </form>
   );

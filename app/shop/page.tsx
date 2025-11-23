@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL, UPLOADS_URL } from "@/lib/config";
-import { ADMIN_PHONE } from "@/lib/constants";
+import { ADMIN_PHONE, PRODUCT_CATEGORIES } from "@/lib/constants";
 import { Copy } from "lucide-react";
 
 type Product = {
   _id: string;
   name: string;
   price: number;
+  category: (typeof PRODUCT_CATEGORIES)[number];
   image?: string | null;
   description?: string | null;
   createdAt?: string;
@@ -24,12 +25,15 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<{ name: string; price: string } | null>(null);
+  const [activeCategory, setActiveCategory] = useState<"All" | (typeof PRODUCT_CATEGORIES)[number]>("All");
 
-  const load = async () => {
+  const load = async (cat?: (typeof PRODUCT_CATEGORIES)[number]) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${BASE_URL}/api/products`, { cache: "no-store" });
+      const url = new URL(`${BASE_URL}/api/products`);
+      if (cat) url.searchParams.set("category", cat);
+      const res = await fetch(url.toString(), { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       setProducts(Array.isArray(data) ? data : []);
@@ -40,7 +44,7 @@ export default function ShopPage() {
     }
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(activeCategory === "All" ? undefined : activeCategory); }, [activeCategory]);
 
   const formatMNT = (value: number) => {
     const s = Math.round(value).toString();
@@ -70,8 +74,22 @@ export default function ShopPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <header className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Дэлгүүр</h1>
+        <header className="mb-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Дэлгүүр</h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {["All", ...PRODUCT_CATEGORIES].map((c) => (
+              <button
+                key={c}
+                className={`rounded px-2 py-1 text-sm ${activeCategory === c ? "bg-[#1080CA] text-white" : "border border-neutral-800 text-neutral-300"}`}
+                onClick={() => setActiveCategory(c as typeof activeCategory)}
+                type="button"
+              >
+                {c}
+              </button>
+            ))}
+          </div>
         </header>
 
         {isSuperAdmin && <AddProduct onAdded={(p) => setProducts((prev) => [p, ...prev])} />}
@@ -97,6 +115,7 @@ export default function ShopPage() {
                   <h3 className="text-lg font-semibold">{p.name}</h3>
                   <div className="text-white">{formatMNT(p.price)}₮</div>
                 </div>
+                <div className="mt-1 text-xs text-neutral-400">Ангилал: {p.category ?? "Тодорхойгүй"}</div>
                 {p.description && <p className="mt-1 line-clamp-3 text-sm text-neutral-300">{p.description}</p>}
               </div>
               <div className="mt-4 flex items-center justify-between">
@@ -133,16 +152,18 @@ function AddProduct({ onAdded }: { onAdded: (p: Product) => void }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [desc, setDesc] = useState("");
+  const [category, setCategory] = useState<(typeof PRODUCT_CATEGORIES)[number] | "">("");
   const [image, setImage] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    if (!token || !name.trim() || !price.trim()) return;
+    if (!token || !name.trim() || !price.trim() || !category) return;
     setBusy(true);
     try {
       const fd = new FormData();
       fd.set("name", name);
       fd.set("price", price);
+      fd.set("category", category);
       if (desc.trim()) fd.set("description", desc);
       if (image) fd.set("image", image);
       const res = await fetch(`${BASE_URL}/api/products`, {
@@ -153,7 +174,7 @@ function AddProduct({ onAdded }: { onAdded: (p: Product) => void }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       onAdded(data?.product as Product);
-      setName(""); setPrice(""); setDesc(""); setImage(null);
+      setName(""); setPrice(""); setDesc(""); setCategory(""); setImage(null);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Алдаа гарлаа");
     } finally {
@@ -167,11 +188,25 @@ function AddProduct({ onAdded }: { onAdded: (p: Product) => void }) {
       <div className="grid gap-2 sm:grid-cols-2">
         <input className="rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none" placeholder="Нэр" value={name} onChange={(e) => setName(e.target.value)} />
         <input className="rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none" placeholder="Үнэ (₮)" value={price} onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ""))} />
+        <div className="sm:col-span-2 flex gap-2 items-center">
+          <label className="text-sm text-neutral-300 shrink-0" htmlFor="category">Ангилал:</label>
+          <select
+            id="category"
+            className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none"
+            value={category}
+            onChange={(e) => setCategory((e.target.value || "") as (typeof PRODUCT_CATEGORIES)[number] | "")}
+          >
+            <option value="" disabled>Сонгох</option>
+            {PRODUCT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
         <input className="sm:col-span-2 rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none" placeholder="Тайлбар (сонголтоор)" value={desc} onChange={(e) => setDesc(e.target.value)} />
         <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} className="text-sm text-neutral-300" />
         <div className="sm:col-span-2 flex items-center justify-end gap-2">
-          <button className="rounded border border-neutral-800 px-3 py-1.5 text-sm" onClick={() => { setName(""); setPrice(""); setDesc(""); setImage(null); }} type="button">Цэвэрлэх</button>
-          <button className="rounded bg-[#1080CA] px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50" disabled={busy || !name.trim() || !price.trim()} onClick={submit} type="button">Нэмэх</button>
+          <button className="rounded border border-neutral-800 px-3 py-1.5 text-sm" onClick={() => { setName(""); setPrice(""); setDesc(""); setCategory(""); setImage(null); }} type="button">Цэвэрлэх</button>
+          <button className="rounded bg-[#1080CA] px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50" disabled={busy || !name.trim() || !price.trim() || !category} onClick={submit} type="button">Нэмэх</button>
         </div>
       </div>
     </section>

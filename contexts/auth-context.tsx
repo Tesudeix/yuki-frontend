@@ -32,7 +32,7 @@ type AuthContextValue = {
   adminToken: string | null;
   adminProfile: AdminProfile | null;
   hydrated: boolean;
-  register: (payload: { phone: string; password: string; name?: string; inviteCode?: string }) => Promise<ActionResult<AuthenticatedUser>>;
+  register: (payload: { phone: string; password: string; name?: string }) => Promise<ActionResult<AuthenticatedUser>>;
   login: (payload: { phone: string; password: string }) => Promise<ActionResult<AuthenticatedUser>>;
   changePassword: (payload: { currentPassword: string; newPassword: string }) => Promise<ActionResult>;
   adminLogin: (payload: { phone: string; password: string }) => Promise<ActionResult<AdminProfile>>;
@@ -155,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [persistToken, persistUser, token]);
 
   const register = useCallback(
-    async ({ phone, password, name, inviteCode }: { phone: string; password: string; name?: string; inviteCode?: string }): Promise<ActionResult<AuthenticatedUser>> => {
+    async ({ phone, password, name }: { phone: string; password: string; name?: string }): Promise<ActionResult<AuthenticatedUser>> => {
       const normalizedPhone = normalizePhoneForE164(phone);
       if (!normalizedPhone || !PHONE_REGEX.test(normalizedPhone)) {
         return { ok: false, error: "Утасны дугаарыг зөв оруулна уу." };
@@ -170,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/users/register", {
         method: "POST",
-        body: JSON.stringify({ phone: normalizedPhone, password, name, inviteCode }),
+        body: JSON.stringify({ phone: normalizedPhone, password, name }),
       });
 
       if (isSuccess(response)) {

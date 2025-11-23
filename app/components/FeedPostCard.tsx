@@ -1,6 +1,7 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { MdiCamera, MdiDotsHorizontal } from "@/app/components/icons";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL, UPLOADS_URL } from "../../lib/config";
 import { ADMIN_PHONE } from "@/lib/constants";
@@ -46,6 +47,9 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
   const [shared, setShared] = useState(false);
 
   const display = state.sharedFrom || state;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const moreBtnRef = useRef<HTMLButtonElement | null>(null);
   const currentUserId = getUserId(user);
 
   const likeCount = state.likes?.length || 0;
@@ -161,69 +165,142 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
     return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss} UTC`;
   };
 
+  const username = (state.user?.name || state.user?.phone || "user").toString().slice(-6);
+  const timeAgo = (iso: string) => {
+    const d = new Date(iso).getTime();
+    const s = Math.max(0, Math.floor((Date.now() - d) / 1000));
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    const days = Math.floor(h / 24);
+    return `${days}d`;
+  };
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!menuOpen) return;
+      const target = e.target as Node | null;
+      if (menuRef.current && target && !menuRef.current.contains(target) && moreBtnRef.current && !moreBtnRef.current.contains(target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [menuOpen]);
+
+  const handleReport = () => {
+    setMenuOpen(false);
+    alert("Reported. Thanks for the feedback.");
+  };
+
   return (
-    <article className="bg-[#111111] rounded-xl p-4 grid gap-3 border border-neutral-800">
-      <header className="grid grid-cols-[auto,1fr] gap-3 items-start">
-        <div className="w-10 h-10 rounded-full overflow-hidden grid place-items-center bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white text-sm font-semibold">
-          {state.user?.avatarUrl ? (
-            <Image
-              src={state.user.avatarUrl as string}
-              alt="avatar"
-              width={40}
-              height={40}
-              className="w-full h-full object-cover"
-              unoptimized
-            />
-          ) : (
-            <span>{letter}</span>
-          )}
-        </div>
-        <div className="grid">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">
-              {state.user?.name || state.user?.phone || "User"}
-            </span>
-            <span className="text-xs text-neutral-400">
-              {formatUtc(state.createdAt)}
-            </span>
-            {state.category && (
-              <span className="ml-2 rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] text-neutral-300">
-                {({ General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[state.category]}
-              </span>
+    <article className="relative w-full border-b border-neutral-800 py-5 mb-6 transition-all duration-200">
+      <header className="flex items-start gap-3">
+        {/* Avatar */}
+        {state.user?.avatarUrl ? (
+          <Image
+            src={state.user.avatarUrl as string}
+            alt="avatar"
+            width={40}
+            height={40}
+            className="rounded-full object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-sm font-semibold text-white">
+            {letter}
+          </div>
+        )}
+
+        <div className="flex-1">
+          {/* Name + actions */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-white leading-none">{state.user?.name || state.user?.phone || "User"}</p>
+              <p className="text-[13px] text-neutral-500">@{username} · {timeAgo(state.createdAt)}</p>
+            </div>
+            <button
+              ref={moreBtnRef}
+              className="text-neutral-500 hover:text-white transition"
+              aria-label="More"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              <MdiDotsHorizontal className="h-5 w-5" />
+            </button>
+
+            {menuOpen && (
+              <div
+                ref={menuRef}
+                role="menu"
+                className="absolute right-0 z-20 mt-8 w-40 overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 py-1 text-sm shadow-xl"
+              >
+                {(isSuperAdmin || isOwner) && (
+                  <button
+                    className="block w-full px-3 py-2 text-left text-red-400 hover:bg-neutral-800"
+                    onClick={() => { setMenuOpen(false); handleDelete(); }}
+                  >
+                    Устгах
+                  </button>
+                )}
+                <button
+                  className="block w-full px-3 py-2 text-left text-neutral-200 hover:bg-neutral-800"
+                  onClick={handleReport}
+                >
+                  Report
+                </button>
+              </div>
             )}
           </div>
-          {state.sharedFrom && (
-            <div className="text-xs text-neutral-400">Хуваалцсан: {state.sharedFrom.user?.name || state.sharedFrom.user?.phone}</div>
+
+          {/* Text */}
+          {display.content && (
+            <p className="mt-2 whitespace-pre-line text-[15px] leading-6 text-white">{display.content}</p>
           )}
+
+          {/* Images */}
+          {display.image && (
+          <div className="mt-3 grid grid-cols-1 gap-2">
+            <div className="aspect-square w-full overflow-hidden rounded-xl">
+              <Image
+                src={`${UPLOADS_URL}/${display.image}`}
+                alt="post image"
+                width={600}
+                height={600}
+                className="h-full w-full object-cover"
+                unoptimized
+              />
+            </div>
+          </div>
+        )}
+
+          {/* Actions */}
+          <div className="mt-3 flex items-center gap-6 text-[15px] text-neutral-500">
+            <button onClick={handleLike} className={`group flex items-center gap-1 transition ${hasLiked ? "text-red-400" : "hover:text-white"}`}>
+              {/* invert to make dark SVG visible on dark bg */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/heart.svg" alt="like" className={`h-5 w-5 invert ${hasLiked ? "opacity-100" : "opacity-60 group-hover:opacity-100"}`} />
+              <span>Like {likeCount ? `(${likeCount})` : ""}</span>
+            </button>
+            <button onClick={() => setOpenComments((o) => !o)} className="group flex items-center gap-1 hover:text-white transition">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/comment.svg" alt="reply" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
+              <span>Reply {commentCount ? `(${commentCount})` : ""}</span>
+            </button>
+            <button onClick={handleShare} className={`group flex items-center gap-1 hover:text-white transition ${shared ? "text-blue-400" : ""}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/share.svg" alt="repost" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
+              <span>Repost {shareCount ? `(${shareCount})` : ""}</span>
+            </button>
+            <button className="group flex items-center gap-1 hover:text-white transition" onClick={() => { /* future share menu */ }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/share.svg" alt="share" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
+              <span>Share</span>
+            </button>
+          </div>
         </div>
       </header>
-
-      {display.content && (
-        <div className="whitespace-pre-wrap text-[15px] leading-relaxed">{display.content}</div>
-      )}
-
-      {display.image && (
-        <Image
-          alt="post"
-          src={`${UPLOADS_URL}/${display.image}`}
-          width={1200}
-          height={675}
-          className="rounded-lg w-full h-auto object-cover"
-          unoptimized
-        />
-      )}
-
-      <nav className="grid grid-cols-3 text-xs text-neutral-400 pt-1">
-        <button onClick={handleLike} className={`flex items-center justify-center gap-1 hover:text-white ${hasLiked ? "text-red-400" : ""}`}>
-          ❤ <span>{likeCount}</span>
-        </button>
-        <button onClick={() => setOpenComments((o) => !o)} className="flex items-center justify-center gap-1 hover:text-white">
-          💬 <span>{commentCount}</span>
-        </button>
-        <button onClick={handleShare} className={`flex items-center justify-center gap-1 hover:text-white ${shared ? "text-blue-400" : ""}`}>
-          ⤴ <span>{shareCount}</span>
-        </button>
-      </nav>
 
       {openComments && (
         <section className="grid gap-2 pt-2">
@@ -237,38 +314,40 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
                   <div>{r.content}</div>
                 </div>
               ))}
-              <div className="flex gap-2 mt-2">
-                <input
-                  value={replyTexts[c._id] || ""}
-                  onChange={(e) => setReplyTexts((s) => ({ ...s, [c._id]: e.target.value }))}
-                  className="flex-1 p-1 bg-[#1b1b1b] rounded"
-                  placeholder="Хариу бичих..."
-                />
-                <button className="text-xs underline" onClick={() => handleReply(c._id)}>Хариулах</button>
+              <div className="mt-2 flex items-center gap-2">
+                {/* small avatar placeholder */}
+                <div className="h-6 w-6 rounded-full bg-neutral-800" />
+                <div className="flex-1 rounded-full bg-[#1b1b1b] px-3 py-2 text-xs text-neutral-200 shadow-inner">
+                  <input
+                    value={replyTexts[c._id] || ""}
+                    onChange={(e) => setReplyTexts((s) => ({ ...s, [c._id]: e.target.value }))}
+                    className="w-full bg-transparent outline-none placeholder:text-neutral-500"
+                    placeholder="Write a reply…"
+                  />
+                </div>
+                <button className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white" onClick={() => handleReply(c._id)} aria-label="Send reply">
+                  <MdiSend className="h-4 w-4" />
+                </button>
               </div>
             </div>
           ))}
-          <div className="flex gap-2">
-            <input
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1 p-2 bg-[#1b1b1b] rounded"
-              placeholder="Сэтгэгдэл нэмэх..."
-            />
-            <button className="underline text-sm" onClick={handleComment}>Илгээх</button>
+          <div className="mt-1 flex items-center gap-2">
+            <div className="h-7 w-7 rounded-full bg-neutral-800" />
+            <div className="flex-1 rounded-full bg-[#1b1b1b] px-3 py-2 text-sm text-neutral-200 shadow-inner">
+              <input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="w-full bg-transparent outline-none placeholder:text-neutral-500"
+                placeholder="Write a comment…"
+              />
+            </div>
+            <button className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white" onClick={handleComment} aria-label="Send comment">
+              <MdiSend className="h-5 w-5" />
+            </button>
           </div>
         </section>
       )}
-      {(isSuperAdmin || isOwner) && (
-        <div className="pt-2">
-          <button
-            onClick={handleDelete}
-            className="rounded-md border border-red-700 px-3 py-1 text-xs text-red-400 hover:bg-red-950"
-          >
-            Постыг устгах
-          </button>
-        </div>
-      )}
+      {/* Delete moved to more menu (hidden in main level) */}
     </article>
   );
 }

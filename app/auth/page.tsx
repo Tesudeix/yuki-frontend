@@ -49,8 +49,7 @@ const AuthPage = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
+  // Invite removed from signup flow
   const [status, setStatus] = useState<"idle" | "submitting" | "processing">("idle");
   const [message, setMessage] = useState<MessageDescriptor | null>(null);
 
@@ -96,12 +95,10 @@ const AuthPage = () => {
       return false;
     }
 
-    if (authMode === "register" && !inviteCode.trim()) {
-      return false;
-    }
+    // No invite required
 
     return true;
-  }, [authMode, confirmPassword, isBusy, password, phone, inviteCode]);
+  }, [authMode, confirmPassword, isBusy, password, phone]);
 
   // Inline error messages
   const phoneError = !isValidPhoneInput(phone) ? "Утасны дугаарыг зөв оруулна уу." : "";
@@ -131,15 +128,10 @@ const AuthPage = () => {
       return;
     }
 
-    if (!inviteCode.trim()) {
-      setMessage({ tone: "error", text: "Invite код шаардлагатай." });
-      return;
-    }
-
     setStatus("submitting");
     setMessage(null);
 
-    const result = await registerUser({ phone: normalizedPhone, password: password.trim(), name: name.trim() || undefined, inviteCode: inviteCode.trim() });
+    const result = await registerUser({ phone: normalizedPhone, password: password.trim() });
     setStatus("idle");
 
     if (result.ok) {
@@ -220,19 +212,21 @@ const AuthPage = () => {
     setPhone("");
     setPassword("");
     setConfirmPassword("");
-    setName("");
     setMessage({ tone: "info", text: "Сесс дууслаа." });
   };
 
   return (
-    <main className="min-h-screen bg-[#161618] text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-[400px] flex-col justify-center px-6 py-12 sm:px-8">
-        <header className="space-y-4">
-          <h1 className="text-white font-extrabold uppercase" style={{ color: "white", letterSpacing: "0.06em" }}>
-            <span className="text-2xl sm:text-3xl tracking-wide">TESUDEIX</span>
-          </h1>
-          <p className="text-sm text-white/90 pb-10 ">One phone. One password.</p>
-        </header>
+    <main className="relative min-h-screen w-full bg-black text-white">
+      {/* Background image */}
+      <div className="absolute inset-0 -z-10 opacity-40">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/ai-clan-bg.jpg" alt="AI Clan Background" className="h-full w-full object-cover" />
+      </div>
+      {/* Dark overlay */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/80 via-black/70 to-black/90" />
+
+      <div className="mx-auto flex min-h-screen w-full max-w-[420px] flex-col justify-start px-6 pt-32 sm:px-8">
+        <h1 className="mb-6 text-3xl font-bold">Нэвтрэх / Бүртгүүлэх</h1>
 
         {message && (
           <div className={`rounded-sm border px-4 py-3 text-sm ${messageStyles[message.tone]}`}>
@@ -306,38 +300,12 @@ const AuthPage = () => {
                 disabled={isBusy}
                 inputMode="numeric"
               />
-              {touchedPhone && phoneError ? (
+              {touchedPhone && phoneError && (
                 <span className="mt-1 block text-xs text-rose-600">{phoneError}</span>
-              ) : (
-                <span className="mt-1 block text-xs text-white">Олон улсын код нэмэх шаардлагагүй.</span>
               )}
             </label>
 
-            {authMode === "register" && (
-              <div className="grid gap-2">
-                <label className="block">
-                  <span className="text-sm font-medium text-white">Invite код</span>
-                  <input
-                    className={`${baseInputClass} border-black/80 focus:border-[var(--focus)]`}
-                    style={{ ['--focus']: FOCUS } as React.CSSProperties}
-                    placeholder="Invite code"
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    disabled={isBusy}
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const url = process.env.NEXT_PUBLIC_PAYMENT_URL || "/payment";
-                    window.location.href = url;
-                  }}
-                  className="w-full rounded-sm border border-black bg-black px-4 py-2 text-sm text-white hover:border-neutral-700"
-                >
-                  Invite код авах
-                </button>
-              </div>
-            )}
+            {/* Invite entry removed — free signup first */}
 
             <label className="block">
               <span className="text-sm font-medium text-white">Нууц үг</span>
@@ -379,17 +347,7 @@ const AuthPage = () => {
                   )}
                 </label>
 
-                <label className="block pb-4">
-                  <span className="text-sm font-medium text-white">Нэр (сонголтоор)</span>
-                  <input
-                    className={`${baseInputClass} border-black/80 focus:border-[var(--focus)]`}
-                    style={{ ['--focus']: FOCUS } as React.CSSProperties}
-                    placeholder="Нэрээ оруулна уу"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    disabled={isBusy}
-                  />
-                </label>
+                {/* Optional name removed */}
               </>
             )}
 
