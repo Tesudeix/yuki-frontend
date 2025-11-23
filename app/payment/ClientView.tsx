@@ -37,32 +37,6 @@ function Mark() {
   );
 }
 
-function ShieldIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M12 2l7 3v6c0 5.25-3.5 9.74-7 11-3.5-1.26-7-5.75-7-11V5l7-3zm-1 12l-3-3 1.4-1.4L11 11.2l3.6-3.6L16 9l-5 5z" />
-    </svg>
-  );
-}
-
-function CardMotif() {
-  return (
-    <svg
-      className="absolute right-[-40px] top-[-20px]"
-      width={220}
-      height={160}
-      viewBox="0 0 220 160"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ opacity: 0.05 }}
-    >
-      <g fill="#e93b68">
-        <path d="M110 10l40 25-15 35-40-12-25-22z" />
-        <path d="M70 70l40 12 44 4-15 30-48-4-26-20z" />
-      </g>
-    </svg>
-  );
-}
 
 function CheckIcon({ className = "" }: { className?: string }) {
   return (
@@ -81,7 +55,7 @@ export default function ClientView() {
     return () => clearTimeout(t);
   }, []);
 
-  const goUsers = () => usersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // composer scroll removed; keep minimal
 
   return (
     <main className="relative">

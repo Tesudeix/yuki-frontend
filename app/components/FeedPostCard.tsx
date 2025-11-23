@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { MdiCamera, MdiDotsHorizontal } from "@/app/components/icons";
+import { MdiDotsHorizontal } from "@/app/components/icons";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL, UPLOADS_URL } from "../../lib/config";
 import { ADMIN_PHONE } from "@/lib/constants";
@@ -153,17 +153,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
 
   const letter = (state.user?.name || state.user?.phone || "U").slice(0, 1).toUpperCase();
 
-  const formatUtc = (iso: string) => {
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const yyyy = d.getUTCFullYear();
-    const mm = pad(d.getUTCMonth() + 1);
-    const dd = pad(d.getUTCDate());
-    const hh = pad(d.getUTCHours());
-    const mi = pad(d.getUTCMinutes());
-    const ss = pad(d.getUTCSeconds());
-    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss} UTC`;
-  };
+  // removed unused UTC formatter
 
   const username = (state.user?.name || state.user?.phone || "user").toString().slice(-6);
   const timeAgo = (iso: string) => {
@@ -326,7 +316,8 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
                   />
                 </div>
                 <button className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white" onClick={() => handleReply(c._id)} aria-label="Send reply">
-                  <MdiSend className="h-4 w-4" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/icons/share.svg" alt="send" className="h-4 w-4 invert" />
                 </button>
               </div>
             </div>
@@ -342,7 +333,8 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
               />
             </div>
             <button className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white" onClick={handleComment} aria-label="Send comment">
-              <MdiSend className="h-5 w-5" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/share.svg" alt="send" className="h-5 w-5 invert" />
             </button>
           </div>
         </section>

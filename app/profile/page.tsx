@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL } from "../../lib/config";
 import FeedPostCard, { type Post } from "@/app/components/FeedPostCard";
-import PostInput from "@/app/components/PostInput";
 
 export default function ProfilePage() {
   const { token, hydrated, user, updateUserLocal } = useAuthContext();
@@ -74,7 +73,6 @@ export default function ProfilePage() {
 
   const handleDelete = (id: string) => setMyPosts((prev) => prev.filter((p) => p._id !== id));
   const handleShareAdd = (p: Post) => setMyPosts((prev) => [p, ...prev]);
-  const handleNewPost = (p: Post) => setMyPosts((prev) => [p, ...prev]);
 
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);

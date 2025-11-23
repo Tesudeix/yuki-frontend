@@ -61,9 +61,13 @@ const AdminPage = () => {
   const [artistForm, setArtistForm] = useState<AdminArtistForm>(defaultArtistForm);
   const [artistFormMode, setArtistFormMode] = useState<"create" | "edit">("create");
   const [adminLoading, setAdminLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invites, setInvites] = useState<{ code: string; days: number; usedAt?: string | null }[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [inviteCount, setInviteCount] = useState("5");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [inviteDays, setInviteDays] = useState("30");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [members, setMembers] = useState<{ id: string; name?: string | null; phone?: string | null; classroomAccess?: boolean; membershipExpiresAt?: string | null }[]>([]);
   const [memberQuery, setMemberQuery] = useState("");
 
@@ -125,15 +129,16 @@ const AdminPage = () => {
         params.set("limit", "200");
         if (memberQuery.trim()) params.set("q", memberQuery.trim());
         const resMembers = await fetch(`${window.location.origin}/users/members?${params.toString()}`, { cache: "no-store" });
-        const dataMembers = await resMembers.json().catch(() => ({}));
+        const dataMembers = (await resMembers.json().catch(() => ({ members: [] as unknown[] }))) as { members?: unknown[] };
         if (resMembers.ok && Array.isArray(dataMembers.members)) {
-          setMembers(dataMembers.members as any);
+          const items = dataMembers.members as { id: string; name?: string | null; phone?: string | null; avatarUrl?: string | null; createdAt?: string | null }[];
+          setMembers(items);
         }
       } catch {}
 
       setAdminLoading(false);
     },
-    [adminToken, resolveError],
+    [adminToken, resolveError, memberQuery],
   );
 
   useEffect(() => {

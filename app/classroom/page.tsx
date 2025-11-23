@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import type { AuthenticatedUser } from "@/lib/types";
 import { useAuthContext } from "@/contexts/auth-context";
 import { ADMIN_PHONE } from "@/lib/constants";
 import { BASE_URL } from "@/lib/config";
