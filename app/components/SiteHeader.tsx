@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/auth-context";
-import { MdiCog } from "@/app/components/icons";
 
 type NavLink = { href: string; label: string };
 
@@ -17,6 +16,7 @@ const coreNav: NavLink[] = [
 
 const extraNav: NavLink[] = [
   { href: "/members", label: "Members" },
+  { href: "/profile", label: "Тохиргоо" },
 ];
 
 const initialsFromName = (value: string): string => {
@@ -63,7 +63,7 @@ export default function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0C0C0C] shadow-[0_2px_20px_rgba(0,0,0,0.3)]">
+    <header className="sticky top-0 z-50 bg-[#0A0A0A] shadow-[0_2px_20px_rgba(0,0,0,0.3)]">
       {/* Main bar */}
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
         {/* Left: Mobile burger + Logo (mobile), Logo (desktop) */}
@@ -135,14 +135,7 @@ export default function SiteHeader() {
                 <ChevronDownIcon className="h-4 w-4 text-neutral-500" />
               </button>
 
-              {/* Settings icon (threads-style) */}
-              <Link
-                href="/profile"
-                className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-800 hover:text-white"
-                aria-label="Тохиргоо"
-              >
-                <MdiCog className="h-5 w-5" />
-              </Link>
+              {/* Settings icon removed on desktop */}
 
               <button
                 type="button"
@@ -185,9 +178,9 @@ export default function SiteHeader() {
             <>
               <Link
                 href="/payment"
-                className="rounded-md bg-[#e93b68] px-3 py-1.5 text-sm font-semibold text-white shadow-[0_6px_20px_-8px_rgba(233,59,104,0.6)] transition-opacity hover:opacity-90"
+                className="rounded-md bg-[#0D81CA] px-3 py-1.5 text-sm font-semibold text-white shadow-[0_6px_20px_-8px_rgba(13,129,202,0.6)] transition-opacity hover:opacity-90"
               >
-                JOIN CLAN
+                КЛАНД НЭГДЭХ
               </Link>
               <Link
                 href="/auth"
@@ -203,14 +196,14 @@ export default function SiteHeader() {
         {!token && (
           <div className="flex items-center md:hidden">
             <Link href="/payment" className="text-sm font-semibold text-white hover:opacity-90">
-              JOIN
+              НЭГДЭХ
             </Link>
           </div>
         )}
       </div>
 
       {/* Pink accent line */}
-      <div className="h-px w-full bg-[#E93B68]/50" />
+      <div className="h-px w-full bg-[#0D81CA]/50" />
 
       {/* Mobile full-screen overlay menu */}
       {mobileOpen && (
@@ -243,7 +236,7 @@ export default function SiteHeader() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-[20px] font-semibold text-white transition-colors hover:text-[#e93b68]"
+                  className="text-[20px] font-semibold text-white transition-colors hover:text-[#0D81CA]"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
@@ -276,10 +269,10 @@ export default function SiteHeader() {
                 <>
                   <Link
                     href="/payment"
-                    className="rounded-md bg-[#e93b68] px-4 py-2.5 text-center text-sm font-semibold text-white hover:opacity-90"
+                    className="rounded-md bg-[#0D81CA] px-4 py-2.5 text-center text-sm font-semibold text-white hover:opacity-90"
                     onClick={() => setMobileOpen(false)}
                   >
-                    JOIN CLAN
+                    КЛАНД НЭГДЭХ
                   </Link>
                   <Link
                     href="/auth"

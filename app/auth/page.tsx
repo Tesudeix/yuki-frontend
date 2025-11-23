@@ -23,7 +23,7 @@ const messageStyles: Record<MessageDescriptor["tone"], string> = {
 
 // Accent color (note: provided as #1080CAz; using #1080CA assuming typo)
 const ACCENT = "#1080CA";
-const FOCUS = "#e93b68"; // subtle glow for focus state
+const FOCUS = "#0D81CA"; // subtle glow for focus state
 
 const cardClass = "rounded-sm border border-black/70 bg-black/95 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.35)] backdrop-blur";
 const baseInputClass =

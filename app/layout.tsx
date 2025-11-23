@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="mn">
-      <body className="min-h-screen bg-gradient-to-br from-black via-neutral-950 to-black font-sans text-neutral-100 antialiased">
+      <body className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#181818] to-[#0A0A0A] font-sans text-neutral-100 antialiased">
         <Providers>
           <SiteHeader />
           {children}

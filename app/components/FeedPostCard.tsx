@@ -182,7 +182,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
 
   const handleReport = () => {
     setMenuOpen(false);
-    alert("Reported. Thanks for the feedback.");
+    alert("Тайлан илгээлээ. Баярлалаа.");
   };
 
   return (
@@ -270,23 +270,23 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
             <button onClick={handleLike} className={`group flex items-center gap-1 transition ${hasLiked ? "text-red-400" : "hover:text-white"}`}>
               {/* invert to make dark SVG visible on dark bg */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/heart.svg" alt="like" className={`h-5 w-5 invert ${hasLiked ? "opacity-100" : "opacity-60 group-hover:opacity-100"}`} />
-              <span>Like {likeCount ? `(${likeCount})` : ""}</span>
+              <img src="/icons/heart.svg" alt="таалагдлаа" className={`h-5 w-5 invert ${hasLiked ? "opacity-100" : "opacity-60 group-hover:opacity-100"}`} />
+              <span>Таалагдлаа {likeCount ? `(${likeCount})` : ""}</span>
             </button>
             <button onClick={() => setOpenComments((o) => !o)} className="group flex items-center gap-1 hover:text-white transition">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/comment.svg" alt="reply" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
-              <span>Reply {commentCount ? `(${commentCount})` : ""}</span>
+              <img src="/icons/comment.svg" alt="хариулах" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
+              <span>Хариулах {commentCount ? `(${commentCount})` : ""}</span>
             </button>
             <button onClick={handleShare} className={`group flex items-center gap-1 hover:text-white transition ${shared ? "text-blue-400" : ""}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/share.svg" alt="repost" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
-              <span>Repost {shareCount ? `(${shareCount})` : ""}</span>
+              <img src="/icons/share.svg" alt="дахин нийтлэх" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
+              <span>Дахин нийтлэх {shareCount ? `(${shareCount})` : ""}</span>
             </button>
             <button className="group flex items-center gap-1 hover:text-white transition" onClick={() => { /* future share menu */ }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/share.svg" alt="share" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
-              <span>Share</span>
+              <img src="/icons/share.svg" alt="хуваалцах" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
+              <span>Хуваалцах</span>
             </button>
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
                 </div>
                 <button className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white" onClick={() => handleReply(c._id)} aria-label="Send reply">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/icons/share.svg" alt="send" className="h-4 w-4 invert" />
+              <img src="/icons/share.svg" alt="илгээх" className="h-4 w-4 invert" />
                 </button>
               </div>
             </div>
@@ -334,7 +334,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
             </div>
             <button className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white" onClick={handleComment} aria-label="Send comment">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/share.svg" alt="send" className="h-5 w-5 invert" />
+              <img src="/icons/share.svg" alt="илгээх" className="h-5 w-5 invert" />
             </button>
           </div>
         </section>

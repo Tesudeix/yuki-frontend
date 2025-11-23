@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 function BackgroundMotif() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#171717,40%,#0d0d0d)] opacity-70" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#0A0A0A,40%,#181818)] opacity-70" />
       <svg
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         width={820}
@@ -14,7 +14,7 @@ function BackgroundMotif() {
         xmlns="http://www.w3.org/2000/svg"
         style={{ opacity: 0.04 }}
       >
-        <g fill="#e93b68">
+        <g fill="#0D81CA">
           <path d="M410 40l90 60-40 90-80-30-60-50z" />
           <path d="M300 170l110 40 120 10-40 90-130-10-70-60z" />
           <path d="M510 120l120 60-60 60-80-30z" />
@@ -29,9 +29,9 @@ function BackgroundMotif() {
 function Mark() {
   return (
     <span className="relative inline-flex h-3 w-3 items-center justify-center">
-      <span className="absolute inline-block h-2 w-2 rounded-full bg-pink-500/80" aria-hidden />
+      <span className="absolute inline-block h-2 w-2 rounded-full bg-[#0D81CA]/80" aria-hidden />
       <svg width="10" height="10" viewBox="0 0 10 10" className="relative" aria-hidden>
-        <path d="M5 0L10 5L5 10L0 5Z" fill="currentColor" className="text-pink-300" />
+        <path d="M5 0L10 5L5 10L0 5Z" fill="#0D81CA" />
       </svg>
     </span>
   );
@@ -72,9 +72,9 @@ export default function ClientView() {
         <p className="mt-2 text-[14px] font-medium text-[#9d9d9d]">
           Багцаа сонгоод Clan-д нэвтрэх эрхээ шууд идэвхжүүл.
           {" "}
-          <span style={{ opacity: 0.6 }}>Focus. Clear. Premium.</span>
+          <span style={{ opacity: 0.6 }}>Төвлөр. Тод. Премиум.</span>
         </p>
-        <div className="mx-auto mt-4 h-px w-24 bg-[#e93b68]" />
+        <div className="mx-auto mt-4 h-px w-24 bg-[#0D81CA]" />
       </section>
 
       {/* Pricing Grid */}
@@ -86,7 +86,7 @@ export default function ClientView() {
             ref={usersRef}
             className={
               "group relative overflow-hidden rounded-2xl border bg-[#171717] p-6 transition-all duration-300 " +
-              "border-[#2a2a2a] hover:scale-[1.02] hover:border-pink-500/30 hover:shadow-[0_10px_30px_-20px_rgba(233,59,104,0.35)] " +
+              "border-[#2a2a2a] hover:scale-[1.02] hover:border-[#0D81CA]/30 hover:shadow-[0_10px_30px_-20px_rgba(13,129,202,0.35)] " +
               (mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2")
             }
             aria-label="Users Plan"
@@ -111,18 +111,18 @@ export default function ClientView() {
 
             <button
               type="button"
-              className="mt-6 w-full rounded-lg bg-[#e93b68] py-2.5 text-center text-sm font-semibold text-white shadow-[0_4px_12px_rgba(233,59,104,0.25)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(233,59,104,0.35)]"
+              className="mt-6 w-full rounded-lg bg-[#0D81CA] py-2.5 text-center text-sm font-semibold text-white shadow-[0_4px_12px_rgba(13,129,202,0.25)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(13,129,202,0.35)]"
             >
               Clan-д нэгдэх — ₮25,000
             </button>
 
             {/* Trust block inside card */}
-            <div className="mt-6 text-[12px] font-semibold uppercase tracking-wide text-neutral-400">Итгэлтэй нэвтрэх эрх</div>
-            <div className="mt-2 grid grid-cols-1 gap-2 text-[13px] text-neutral-300 sm:grid-cols-3">
-              <div className="flex items-center gap-2"><CheckIcon className="h-4 w-4 text-pink-400" /> Төлбөр баталгаатай</div>
-              <div className="flex items-center gap-2"><CheckIcon className="h-4 w-4 text-pink-400" /> Даруй идэвхжинэ</div>
-              <div className="flex items-center gap-2"><CheckIcon className="h-4 w-4 text-pink-400" /> Cancel anytime</div>
-            </div>
+              <div className="mt-6 text-[12px] font-semibold uppercase tracking-wide text-neutral-400">Итгэлтэй нэвтрэх эрх</div>
+              <div className="mt-2 grid grid-cols-1 gap-2 text-[13px] text-neutral-300 sm:grid-cols-3">
+                <div className="flex items-center gap-2"><CheckIcon className="h-4 w-4 text-[#0D81CA]" /> Төлбөр баталгаатай</div>
+                <div className="flex items-center gap-2"><CheckIcon className="h-4 w-4 text-[#0D81CA]" /> Даруй идэвхжинэ</div>
+                <div className="flex items-center gap-2"><CheckIcon className="h-4 w-4 text-[#0D81CA]" /> Хэзээ ч цуцлах боломжтой</div>
+              </div>
           </article>
         </div>
 

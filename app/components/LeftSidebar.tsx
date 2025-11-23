@@ -10,7 +10,7 @@ export default function LeftSidebar() {
   return (
     <aside id="left-sidebar" className="hidden md:block sticky top-4 self-start">
       <div className="grid gap-3">
-        <div className="bg-[#111111] rounded-xl p-4 flex items-center gap-3">
+        <div className="bg-[#181818] rounded-xl p-4 flex items-center gap-3">
           {user?.avatarUrl ? (
             <Image src={user.avatarUrl as string} alt="Avatar" width={40} height={40} className="h-10 w-10 rounded-full object-cover" unoptimized />
           ) : (
@@ -23,7 +23,7 @@ export default function LeftSidebar() {
             <div className="text-base font-semibold text-white">{user?.name || user?.phone || "User"}</div>
           </div>
         </div>
-        <nav className="bg-[#111111] rounded-xl p-2">
+        <nav className="bg-[#181818] rounded-xl p-2">
           <ul className="grid">
             <li>
               <Link href="/feed" className="block px-3 py-2 rounded-md text-sm hover:bg-neutral-800">Home</Link>

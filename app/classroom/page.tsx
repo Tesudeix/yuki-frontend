@@ -219,8 +219,8 @@ export default function ClassroomPage() {
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-8 md:grid-cols-[300px_1fr]">
         {/* Paywall banner for non-members */}
         {!user?.classroomAccess && (
-          <div className="md:col-span-2 rounded-md border border-pink-500/20 bg-pink-500/5 px-4 py-3 text-sm text-neutral-200">
-            Classroom нь Clan гишүүдэд нээлттэй. <a href="/payment" className="ml-2 underline decoration-pink-500 hover:text-white">Clan-д нэгдэх — ₮25,000</a>
+          <div className="md:col-span-2 rounded-md border border-[#0D81CA]/20 bg-[#0D81CA]/5 px-4 py-3 text-sm text-neutral-200">
+            Classroom нь Clan гишүүдэд нээлттэй. <a href="/payment" className="ml-2 underline decoration-[#0D81CA] hover:text-white">Clan-д нэгдэх — ₮25,000</a>
           </div>
         )}
         {/* Sidebar */}

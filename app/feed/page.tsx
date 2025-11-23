@@ -71,21 +71,17 @@ export default function FeedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#181818] to-[#0A0A0A] text-white">
       <div className="mx-auto max-w-6xl p-4 grid gap-4 md:grid-cols-[240px,minmax(0,1fr)] lg:grid-cols-[240px,minmax(0,1fr),300px]">
 
         <main className="grid gap-4">
-          {/* Top title */}
-          <div className="flex items-center justify-center py-2">
-            <h1 className="text-sm font-semibold text-neutral-400">AI Clan • Feed</h1>
-          </div>
 
           {/* Pinned paywall banner */}
           {user && !user.classroomAccess && (
             <div className="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm text-neutral-200">
               <span className="mr-2">📌</span>
               Community нь Clan гишүүдэд нээлттэй.
-              <a href="/payment" className="ml-2 underline decoration-pink-500 hover:text-white">Clan-д нэгдэх — ₮25,000</a>
+              <a href="/payment" className="ml-2 underline decoration-[#0D81CA] hover:text-white">Clan-д нэгдэх — ₮25,000</a>
             </div>
           )}
 
@@ -94,7 +90,7 @@ export default function FeedPage() {
             {(["All","General","News","Tools","Tasks"] as const).map((c) => (
               <button
                 key={c}
-                className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#e93b68] text-white" : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"}`}
+                className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#0D81CA] text-white" : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"}`}
                 onClick={() => setCategory(c)}
               >
                 {({ All: "Бүгд", General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}
@@ -113,7 +109,7 @@ export default function FeedPage() {
             {loading && posts.length === 0 && (
               <>
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="rounded-xl border border-neutral-800 bg-[#111111] p-4">
+                  <div key={i} className="rounded-xl border border-neutral-800 bg-[#181818] p-4">
                     <div className="mb-3 flex items-center gap-3">
                       <Skeleton className="h-10 w-10 rounded-full" />
                       <div className="flex-1">
@@ -147,7 +143,7 @@ export default function FeedPage() {
             {loading && posts.length > 0 && (
               <div className="grid gap-3">
                 {Array.from({ length: 2 }).map((_, i) => (
-                  <div key={i} className="rounded-xl border border-neutral-800 bg-[#111111] p-4">
+                  <div key={i} className="rounded-xl border border-neutral-800 bg-[#181818] p-4">
                     <div className="mb-3 flex items-center gap-3">
                       <Skeleton className="h-10 w-10 rounded-full" />
                       <div className="flex-1">
@@ -163,19 +159,7 @@ export default function FeedPage() {
             <div ref={loadMoreRef} />
           </section>
 
-          {/* Floating '+' button */}
-          {token && (
-            <button
-              onClick={() => {
-                const el = document.getElementById("composer-anchor");
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-white text-black text-3xl flex items-center justify-center shadow-xl hover:bg-neutral-200"
-              aria-label="Create post"
-            >
-              +
-            </button>
-          )}
+          {/* Floating '+' button removed as requested */}
         </main>
       </div>
     </div>

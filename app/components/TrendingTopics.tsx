@@ -43,12 +43,12 @@ export default function TrendingTopics() {
   }, []);
 
   return (
-    <section className="bg-[#111111] rounded-xl p-4">
-      <h3 className="text-sm font-semibold mb-3">Trending</h3>
+    <section className="bg-[#181818] rounded-xl p-4">
+      <h3 className="text-sm font-semibold mb-3">Трэнд сэдвүүд</h3>
       <ul className="space-y-2 text-sm text-neutral-300">
-        {topics.length === 0 && <li className="text-neutral-500">No trending topics yet</li>}
+        {topics.length === 0 && <li className="text-neutral-500">Одоогоор трэнд сэдэв алга</li>}
         {topics.map((t) => (
-          <li key={t.id} className="truncate">{t.text || "Untitled post"}</li>
+          <li key={t.id} className="truncate">{t.text || "Гарчиггүй пост"}</li>
         ))}
       </ul>
     </section>

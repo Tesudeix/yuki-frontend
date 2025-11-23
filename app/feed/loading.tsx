@@ -2,14 +2,14 @@ import { Skeleton } from "@/app/components/Skeleton";
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#181818] to-[#0A0A0A] text-white">
       <div className="mx-auto max-w-6xl p-4 grid gap-4 md:grid-cols-[240px,minmax(0,1fr)] lg:grid-cols-[240px,minmax(0,1fr),300px]">
         <main className="grid gap-4">
           <div className="flex items-center justify-between">
             <div className="h-6 w-32 animate-pulse rounded bg-neutral-800" />
           </div>
           {/* Composer skeleton */}
-          <div className="grid gap-3 rounded bg-[#111111] p-4">
+          <div className="grid gap-3 rounded bg-[#181818] p-4">
             <Skeleton className="h-5 w-24" />
             <Skeleton className="h-20 w-full" />
             <div className="flex items-center justify-end gap-2">
@@ -19,7 +19,7 @@ export default function Loading() {
           </div>
           {/* Posts skeleton */}
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-neutral-800 bg-[#111111] p-4">
+            <div key={i} className="rounded-xl border border-neutral-800 bg-[#181818] p-4">
               <div className="mb-3 flex items-center gap-3">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="flex-1">
@@ -40,4 +40,3 @@ export default function Loading() {
     </div>
   );
 }
-

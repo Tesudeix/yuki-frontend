@@ -82,7 +82,7 @@ export default function PostInput({ onPost, initialCategory }: Props) {
       <div className="flex-1">
         <textarea
           ref={taRef}
-          placeholder="What's new?"
+          placeholder="Юу болж байна?"
           className="w-full bg-transparent text-white placeholder-neutral-500 outline-none resize-none"
           rows={1}
           value={content}
@@ -93,7 +93,7 @@ export default function PostInput({ onPost, initialCategory }: Props) {
         {previewUrl && (
           <div className="relative mt-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl} alt="preview" className="max-h-64 w-auto rounded object-cover" />
+            <img src={previewUrl} alt="урьдчилж харах" className="max-h-64 w-auto rounded object-cover" />
             <button className="absolute top-1 right-1 rounded bg-black/60 px-2 text-white" type="button" onClick={() => setImageFile(null)}>×</button>
           </div>
         )}

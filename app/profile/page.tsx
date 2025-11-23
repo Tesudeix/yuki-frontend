@@ -123,11 +123,11 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#181818] to-[#0A0A0A] text-white">
       <div className="mx-auto max-w-3xl p-4 grid gap-5">
         {/* Top title */}
         <div className="flex items-center justify-center py-2">
-          <h1 className="text-sm font-semibold text-neutral-400">AI Clan • Profile</h1>
+          <h1 className="text-sm font-semibold text-neutral-400">AI Clan • Профайл</h1>
         </div>
         {/* Profile header styled like feed row */}
         <header className="w-full border-b border-neutral-800 py-5">
@@ -185,7 +185,7 @@ export default function ProfilePage() {
           <div className="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm text-neutral-200">
             <span className="mr-2">📌</span>
             Community нь Clan гишүүдэд нээлттэй.
-            <a href="/payment" className="ml-2 underline decoration-pink-500 hover:text-white">Clan-д нэгдэх — ₮25,000</a>
+            <a href="/payment" className="ml-2 underline decoration-[#0D81CA] hover:text-white">Clan-д нэгдэх — ₮25,000</a>
           </div>
         )}
 
@@ -194,7 +194,7 @@ export default function ProfilePage() {
           {(["All","General","News","Tools","Tasks"] as const).map((c) => (
             <button
               key={c}
-              className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#e93b68] text-white" : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"}`}
+              className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#0D81CA] text-white" : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"}`}
               onClick={() => setCategory(c)}
             >
               {({ All: "Бүгд", General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}
@@ -206,8 +206,8 @@ export default function ProfilePage() {
           {myPosts.map((p) => (
             <FeedPostCard key={p._id} post={p} onDelete={handleDelete} onShareAdd={handleShareAdd} />
           ))}
-          {loading && <div className="text-center py-4 text-sm text-neutral-400">Loading...</div>}
-          <div ref={loadMoreRef} />
+          {loading && <div className="text-center py-4 text-sm text-neutral-400">Ачаалж байна...</div>}
+        <div ref={loadMoreRef} />
         </section>
 
 
