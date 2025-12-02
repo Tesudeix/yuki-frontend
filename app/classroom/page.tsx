@@ -44,7 +44,10 @@ export default function ClassroomPage() {
   const canSave = (mode === "youtube" ? Boolean(newUrl.trim()) : Boolean(file)) && Boolean(newTitle.trim()) && Boolean(newFolder.trim());
 
   // Superadmin controls: grant classroom access by phone
-  const isSuperAdmin = useMemo(() => Boolean(user?.phone && user.phone === ADMIN_PHONE), [user?.phone]);
+  const isSuperAdmin = useMemo(() => {
+    const digits = (v: unknown) => String(v || "").replace(/\D/g, "");
+    return Boolean(user?.phone && digits(user.phone) === digits(ADMIN_PHONE));
+  }, [user?.phone]);
   const [grantPhone, setGrantPhone] = useState("");
   const [grantBusy, setGrantBusy] = useState(false);
   const grantAccess = async (access: boolean) => {

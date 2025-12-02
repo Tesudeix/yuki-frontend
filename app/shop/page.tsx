@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL, UPLOADS_URL } from "@/lib/config";
 import { ADMIN_PHONE, PRODUCT_CATEGORIES } from "@/lib/constants";
@@ -19,7 +21,12 @@ type Product = {
 
 export default function ShopPage() {
   const { token, user } = useAuthContext();
-  const isSuperAdmin = useMemo(() => Boolean(user?.phone && user.phone === ADMIN_PHONE), [user?.phone]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isSuperAdmin = useMemo(() => {
+    const digits = (v: unknown) => String(v || "").replace(/\D/g, "");
+    return Boolean(user?.phone && digits(user.phone) === digits(ADMIN_PHONE));
+  }, [user?.phone]);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +50,16 @@ export default function ShopPage() {
       setLoading(false);
     }
   };
+
+  // Initialize category from URL on mount and on param change
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat && PRODUCT_CATEGORIES.includes(cat as (typeof PRODUCT_CATEGORIES)[number])) {
+      setActiveCategory(cat as (typeof PRODUCT_CATEGORIES)[number]);
+    } else {
+      setActiveCategory("All");
+    }
+  }, [searchParams]);
 
   useEffect(() => { void load(activeCategory === "All" ? undefined : activeCategory); }, [activeCategory]);
 
@@ -83,7 +100,12 @@ export default function ShopPage() {
               <button
                 key={c}
                 className={`rounded px-2 py-1 text-sm ${activeCategory === c ? "bg-[#1080CA] text-white" : "border border-neutral-800 text-neutral-300"}`}
-                onClick={() => setActiveCategory(c as typeof activeCategory)}
+                onClick={() => {
+                  const next = c as typeof activeCategory;
+                  setActiveCategory(next);
+                  const q = next === "All" ? "" : `?category=${encodeURIComponent(next)}`;
+                  router.replace(`/shop${q}`);
+                }}
                 type="button"
               >
                 {c}
@@ -99,25 +121,27 @@ export default function ShopPage() {
         <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => (
             <article key={p._id} className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-              {p.image && (
-                <div className="relative w-full overflow-hidden rounded-lg bg-neutral-900" style={{ aspectRatio: "3 / 4" }}>
-                  <Image
-                    src={`${UPLOADS_URL}/${p.image}`}
-                    alt={p.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
+              <Link href={`/shop/${p._id}`} className="block group">
+                {p.image && (
+                  <div className="relative w-full overflow-hidden rounded-lg bg-neutral-900" style={{ aspectRatio: "3 / 4" }}>
+                    <Image
+                      src={`${UPLOADS_URL}/${p.image}`}
+                      alt={p.name}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      unoptimized
+                    />
+                  </div>
+                )}
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold hover:underline">{p.name}</h3>
+                    <div className="text-white">{formatMNT(p.price)}₮</div>
+                  </div>
+                  <div className="mt-1 text-xs text-neutral-400">Ангилал: {p.category ?? "Тодорхойгүй"}</div>
+                  {p.description && <p className="mt-1 line-clamp-3 text-sm text-neutral-300">{p.description}</p>}
                 </div>
-              )}
-              <div className="mt-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">{p.name}</h3>
-                  <div className="text-white">{formatMNT(p.price)}₮</div>
-                </div>
-                <div className="mt-1 text-xs text-neutral-400">Ангилал: {p.category ?? "Тодорхойгүй"}</div>
-                {p.description && <p className="mt-1 line-clamp-3 text-sm text-neutral-300">{p.description}</p>}
-              </div>
+              </Link>
               <div className="mt-4 flex items-center justify-between">
                 {isSuperAdmin ? (
                   <button

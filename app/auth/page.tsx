@@ -135,8 +135,8 @@ const AuthPage = () => {
     setStatus("idle");
 
     if (result.ok) {
-      setMessage({ tone: "success", text: "Бүртгэл амжилттай. Feed рүү шилжиж байна." });
-      router.push("/feed");
+      setMessage({ tone: "success", text: "Бүртгэл амжилттай. Төлбөрийн хуудас руу шилжиж байна." });
+      router.push("/payment");
     } else {
       setMessage({ tone: "error", text: result.error });
     }
@@ -159,7 +159,8 @@ const AuthPage = () => {
     setStatus("submitting");
     setMessage(null);
 
-    if (normalizedPhone === ADMIN_PHONE) {
+    const digits = (v: unknown) => String(v || "").replace(/\D/g, "");
+    if (digits(normalizedPhone) === digits(ADMIN_PHONE)) {
       const adminResult = await adminLogin({ phone: normalizedPhone, password: password.trim() });
       setStatus("idle");
 

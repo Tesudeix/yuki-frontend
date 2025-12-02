@@ -14,6 +14,7 @@ export type Post = {
   user?: User;
   content: string;
   image?: string;
+  images?: string[];
   category?: "General" | "News" | "Tools" | "Tasks";
   likes: (string | User)[];
   comments?: Comment[];
@@ -59,7 +60,8 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
   const ownerId = getUserId(state.user);
   const isOwner = ownerId && currentUserId && ownerId === currentUserId;
 
-  const isSuperAdmin = (user?.phone && user.phone === ADMIN_PHONE) || false;
+  const digits = (v: unknown) => String(v || "").replace(/\D/g, "");
+  const isSuperAdmin = digits(user?.phone) && digits(user?.phone) === digits(ADMIN_PHONE);
 
   const hasLiked = useMemo(() => {
     const me = currentUserId;
@@ -249,21 +251,33 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
             <p className="mt-2 whitespace-pre-line text-[15px] leading-6 text-white">{display.content}</p>
           )}
 
-          {/* Images */}
-          {display.image && (
-          <div className="mt-3 grid grid-cols-1 gap-2">
-            <div className="aspect-square w-full overflow-hidden rounded-xl">
-              <Image
-                src={`${UPLOADS_URL}/${display.image}`}
-                alt="post image"
-                width={600}
-                height={600}
-                className="h-full w-full object-cover"
-                unoptimized
-              />
-            </div>
-          </div>
-        )}
+          {/* Images — horizontal carousel (Instagram/Threads style) */}
+          {(display.images && display.images.length > 0) || display.image ? (
+            (() => {
+              // Prefer images[] if present; fallback to single image string (comma-separated tolerant)
+              const images = (Array.isArray(display.images) && display.images.length > 0
+                ? display.images
+                : (typeof display.image === "string" ? display.image.split(",") : [])
+              ).map((s) => String(s).trim()).filter(Boolean);
+
+              return (
+                <div className="mt-3 flex w-full snap-x overflow-x-auto gap-4">
+                  {images.map((img, idx) => (
+                    <div key={`${img}-${idx}`} className="w-72 flex-shrink-0 snap-center">
+                      <Image
+                        src={`${UPLOADS_URL}/${img}`}
+                        alt="post image"
+                        width={288}
+                        height={360}
+                        className="w-full h-auto rounded-xl object-cover aspect-[4/5]"
+                        unoptimized
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()
+          ) : null}
 
           {/* Actions */}
           <div className="mt-3 flex items-center gap-6 text-[15px] text-neutral-500">

@@ -10,7 +10,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!hydrated) return;
-    router.replace(token ? "/feed" : "/auth");
+    router.replace(token ? "/feed" : "/news");
   }, [hydrated, token, router]);
 
   return null;

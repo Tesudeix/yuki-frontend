@@ -1,4 +1,4 @@
-export const PHONE_REGEX = /^\+\d{9,15}$/;
+export const PHONE_REGEX = /^\+?\d{8,15}$/;
 
 export const PASSWORD_MIN_LENGTH = 6;
 

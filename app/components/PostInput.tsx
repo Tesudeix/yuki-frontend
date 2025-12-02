@@ -12,6 +12,7 @@ export default function PostInput({ onPost, initialCategory }: Props) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   // Keep category internal (hidden UI), default to initial or General
   const [category, setCategory] = useState<"General" | "News" | "Tools" | "Tasks">(initialCategory || "General");
   useEffect(() => { if (initialCategory) setCategory(initialCategory); }, [initialCategory]);
@@ -40,6 +41,7 @@ export default function PostInput({ onPost, initialCategory }: Props) {
     if (!content.trim() && !imageFile) return;
     try {
       setPosting(true);
+      setErrorMsg(null);
       const fd = new FormData();
       fd.append("content", content);
       fd.append("category", category);
@@ -56,7 +58,8 @@ export default function PostInput({ onPost, initialCategory }: Props) {
         if (fileRef.current) fileRef.current.value = "";
         onPost?.(data.post);
       } else {
-        console.warn("Create post failed", data);
+        const msg = (data && (data.error || data.message)) || (res.status === 403 ? "Зөвхөн гишүүд пост хийж чадна." : "Пост үүсгэхэд алдаа гарлаа.");
+        setErrorMsg(String(msg));
       }
     } finally {
       setPosting(false);
@@ -80,6 +83,11 @@ export default function PostInput({ onPost, initialCategory }: Props) {
 
       {/* Composer (right) */}
       <div className="flex-1">
+        {errorMsg && (
+          <div className="mb-2 rounded-md border border-red-600/40 bg-red-900/20 px-3 py-2 text-xs text-red-300">
+            {errorMsg}
+          </div>
+        )}
         <textarea
           ref={taRef}
           placeholder="Юу болж байна?"

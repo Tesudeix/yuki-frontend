@@ -11,6 +11,7 @@ type NavLink = { href: string; label: string };
 const coreNav: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/feed", label: "Community" },
+  { href: "/shop", label: "Shop" },
   { href: "/classroom", label: "Classroom" },
 ];
 

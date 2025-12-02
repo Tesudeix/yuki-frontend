@@ -1,5 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { BASE_URL } from "@/lib/config";
+import { useAuthContext } from "@/contexts/auth-context";
 
 function BackgroundMotif() {
   return (
@@ -49,10 +53,33 @@ function CheckIcon({ className = "" }: { className?: string }) {
 export default function ClientView() {
   const [mounted, setMounted] = useState(false);
   const usersRef = useRef<HTMLDivElement | null>(null);
+  const [members, setMembers] = useState<Array<{ id: string; name?: string | null; phone?: string | null; avatarUrl?: string | null }>>([]);
+  const [total, setTotal] = useState<number>(0);
+  const { user, token, fetchProfile } = useAuthContext();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [bankKey, setBankKey] = useState<"khan" | "golomt">("khan");
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 40);
     return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const url = new URL(`${BASE_URL}/users/members`);
+        url.searchParams.set("limit", "50");
+        const res = await fetch(url.toString(), { cache: "no-store" });
+        const data = await res.json();
+        if (res.ok) {
+          setMembers((data.members || []) as Array<{ id: string; name?: string | null; phone?: string | null; avatarUrl?: string | null }>);
+          setTotal(Number(data.total || 0));
+        }
+      } catch {
+        // ignore; keep minimal
+      }
+    };
+    void run();
   }, []);
 
   // composer scroll removed; keep minimal
@@ -75,6 +102,26 @@ export default function ClientView() {
           <span style={{ opacity: 0.6 }}>Төвлөр. Тод. Премиум.</span>
         </p>
         <div className="mx-auto mt-4 h-px w-24 bg-[#0D81CA]" />
+      </section>
+
+      {/* Account info */}
+      <section className="mx-auto max-w-[980px] px-6 pb-4">
+        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-neutral-400">Миний бүртгэл</div>
+              <div className="text-base font-semibold text-white">{user?.name || user?.phone || "Зочин"}</div>
+              <div className="text-xs text-neutral-400">Төлөв: {user?.classroomAccess ? "Идэвхтэй гишүүн" : "Идэвхгүй"}</div>
+            </div>
+            <div className="flex gap-2">
+              {!token ? (
+                <button onClick={() => router.push("/auth")} className="rounded-md bg-[#0D81CA] px-3 py-2 text-sm font-semibold text-white">Нэвтрэх</button>
+              ) : (
+                <button onClick={() => void fetchProfile()} className="rounded-md border border-neutral-700 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-900">Шинэчлэх</button>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Pricing Grid */}
@@ -105,15 +152,16 @@ export default function ClientView() {
             <ul className="mt-3 space-y-2 text-[15px] text-neutral-200">
               <li className="flex items-center gap-2"><Mark /> AI Community — 24/7 тусламж</li>
               <li className="flex items-center gap-2"><Mark /> Хичээлүүд — алхам алхмаар</li>
-              <li className="flex items-center gap-2"><Mark /> Agent ашиглах — workflow автоматжуулалт</li>
+              <li className="flex items-center gap-2"><Mark /> Цаг хэмнэх AI tools — workflow автоматжуулалт</li>
               <li className="flex items-center gap-2"><Mark /> Сүүлийн AI мэдээ — долоо хоног бүр</li>
             </ul>
 
             <button
               type="button"
               className="mt-6 w-full rounded-lg bg-[#0D81CA] py-2.5 text-center text-sm font-semibold text-white shadow-[0_4px_12px_rgba(13,129,202,0.25)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(13,129,202,0.35)]"
+              onClick={() => { if (!token) router.push("/auth"); else setOpen(true); }}
             >
-              Clan-д нэгдэх — ₮25,000
+              Дижитал байлдан дагуулагч бол — ₮25,000
             </button>
 
             {/* Trust block inside card */}
@@ -125,6 +173,60 @@ export default function ClientView() {
               </div>
           </article>
         </div>
+
+        {/* Payment overlay */}
+        {open && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+            <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-950 p-5 text-white">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Төлбөр — Clan</h2>
+                <button onClick={() => setOpen(false)} className="rounded-md border border-neutral-700 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-900">Хаах</button>
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-neutral-300">Банк:</span>
+                  <div className="inline-flex rounded-md border border-neutral-800 p-0.5">
+                    <button type="button" className={`rounded-sm px-2 py-1 ${bankKey === "khan" ? "bg-[#1080CA] text-white" : "text-neutral-300"}`} onClick={() => setBankKey("khan")}>Хаан</button>
+                    <button type="button" className={`rounded-sm px-2 py-1 ${bankKey === "golomt" ? "bg-[#1080CA] text-white" : "text-neutral-300"}`} onClick={() => setBankKey("golomt")}>Голомт</button>
+                  </div>
+                </div>
+                <div className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm">
+                  <div className="text-neutral-300">Данс</div>
+                  <div className="truncate font-medium text-white">{bankKey === "khan" ? "Хаан банк — MN720005005926153085" : "Голомт банк — MN150015003005127815"}</div>
+                  <div className="text-xs text-neutral-400">Эзэмшигч: Baynbileg Dambadarjaa</div>
+                </div>
+                <div className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm">
+                  <div className="text-neutral-300">Гүйлгээний утга</div>
+                  <div className="truncate font-medium text-white">{user?.phone || user?.name || "Утасны дугаар/нэр"}</div>
+                  <div className="text-xs text-neutral-400">Та заавал утас эсвэл нэрээ бичээрэй.</div>
+                </div>
+                <button onClick={() => alert("Төлбөр шалгагдсаны дараа гишүүнчлэл идэвхжинэ. Хэрэв 10 минутын дотор идэвхжихгүй бол 94641031 дугаарруу холбогдоно уу.")} className="mt-2 rounded-md bg-[#1080CA] px-4 py-2 text-sm font-semibold text-white">Төлбөр төлсөн</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Current active members */}
+        <section className="mx-auto mt-10 max-w-[980px] px-6">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-neutral-300">Идэвхтэй гишүүд <span className="text-neutral-500">({total})</span></h2>
+            <a href="/members" className="text-xs text-neutral-400 hover:text-white">бүгдийг харах →</a>
+          </div>
+          <div className="flex snap-x overflow-x-auto gap-3">
+            {members.map((m) => (
+              <div key={m.id} className="w-28 shrink-0 snap-start rounded-md border border-neutral-800 bg-neutral-950 p-3 text-center">
+                {m.avatarUrl ? (
+                  <Image src={m.avatarUrl} alt={m.name || m.phone || "avatar"} width={48} height={48} className="mx-auto h-12 w-12 rounded-full object-cover" unoptimized />
+                ) : (
+                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold">
+                    {(m.name || m.phone || "U").toString().slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="mt-2 truncate text-xs text-neutral-300">{m.name || m.phone || "Member"}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Footer info */}
         <div className="mt-12 border-t border-white/5 pt-6">
