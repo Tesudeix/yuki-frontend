@@ -144,15 +144,15 @@ export default function ProfilePage() {
               />
             ) : (
               <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-sm font-semibold">
-                {(user?.name || user?.phone || "U").toString().slice(0, 2).toUpperCase()}
+                {(user?.name || (user as any)?.username || user?.phone || "U").toString().slice(0, 2).toUpperCase()}
               </div>
             )}
 
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-white leading-none">{user?.name || user?.phone || "User"}</p>
-                  <p className="text-[13px] text-neutral-500">@{(user?.name || user?.phone || "user").toString().slice(-6)}</p>
+                  <p className="font-semibold text-white leading-none">{user?.name || (user as any)?.username || user?.phone || "User"}</p>
+                  <p className="text-[13px] text-neutral-500">@{(user?.name || (user as any)?.username || user?.phone || "user").toString().slice(-6)}</p>
                 </div>
                 <button className="text-neutral-500 hover:text-white transition" aria-label="More">
                   <MdiDotsHorizontal className="h-5 w-5" />

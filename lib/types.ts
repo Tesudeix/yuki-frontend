@@ -6,7 +6,8 @@ export type MessageDescriptor = {
 };
 
 export type AuthenticatedUserBase = {
-  phone: string;
+  phone?: string | null;
+  username?: string | null;
   id?: string;
   name?: string | null;
   email?: string | null;

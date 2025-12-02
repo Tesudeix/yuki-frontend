@@ -1,4 +1,5 @@
 export const PHONE_REGEX = /^\+?\d{8,15}$/;
+export const USERNAME_REGEX = /^[A-Za-z0-9._-]{3,32}$/;
 
 export const PASSWORD_MIN_LENGTH = 6;
 

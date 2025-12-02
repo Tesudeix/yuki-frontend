@@ -61,7 +61,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
   const isOwner = ownerId && currentUserId && ownerId === currentUserId;
 
   const digits = (v: unknown) => String(v || "").replace(/\D/g, "");
-  const isSuperAdmin = digits(user?.phone) && digits(user?.phone) === digits(ADMIN_PHONE);
+  const isSuperAdmin = (digits(user?.phone) && digits(user?.phone) === digits(ADMIN_PHONE)) || (digits((user as any)?.username) && digits((user as any)?.username) === digits(ADMIN_PHONE));
 
   const hasLiked = useMemo(() => {
     const me = currentUserId;
@@ -153,11 +153,11 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
     }
   };
 
-  const letter = (state.user?.name || state.user?.phone || "U").slice(0, 1).toUpperCase();
+  const letter = (state.user?.name || (state.user as any)?.username || state.user?.phone || "U").slice(0, 1).toUpperCase();
 
   // removed unused UTC formatter
 
-  const username = (state.user?.name || state.user?.phone || "user").toString().slice(-6);
+  const username = (state.user?.name || (state.user as any)?.username || state.user?.phone || "user").toString().slice(-6);
   const timeAgo = (iso: string) => {
     const d = new Date(iso).getTime();
     const s = Math.max(0, Math.floor((Date.now() - d) / 1000));
@@ -210,7 +210,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
           {/* Name + actions */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold text-white leading-none">{state.user?.name || state.user?.phone || "User"}</p>
+              <p className="font-semibold text-white leading-none">{state.user?.name || (state.user as any)?.username || state.user?.phone || "User"}</p>
               <p className="text-[13px] text-neutral-500">@{username} · {timeAgo(state.createdAt)}</p>
             </div>
             <button
@@ -310,11 +310,11 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
         <section className="grid gap-2 pt-2">
           {(state.comments || []).map((c) => (
             <div key={c._id} className="text-sm">
-              <div className="font-semibold">{c.user?.name || c.user?.phone || "User"}</div>
+              <div className="font-semibold">{c.user?.name || (c.user as any)?.username || c.user?.phone || "User"}</div>
               <div className="text-[13px]">{c.content}</div>
               {(c.replies || []).map((r) => (
                 <div key={r._id} className="ml-4 text-xs mt-1">
-                  <div className="font-semibold">{r.user?.name || r.user?.phone || "User"}</div>
+                  <div className="font-semibold">{r.user?.name || (r.user as any)?.username || r.user?.phone || "User"}</div>
                   <div>{r.content}</div>
                 </div>
               ))}

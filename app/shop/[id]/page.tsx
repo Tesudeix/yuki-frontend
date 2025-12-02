@@ -26,7 +26,8 @@ export default function ProductDetailPage() {
 
   const isSuperAdmin = useMemo(() => {
     const d = (v: unknown) => String(v || "").replace(/\D/g, "");
-    return Boolean(user?.phone && d(user.phone) === d(ADMIN_PHONE));
+    const up = user as any;
+    return Boolean((user?.phone && d(user.phone) === d(ADMIN_PHONE)) || (up?.username && d(up.username) === d(ADMIN_PHONE)));
   }, [user?.phone]);
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -185,4 +186,3 @@ export default function ProductDetailPage() {
     </main>
   );
 }
-

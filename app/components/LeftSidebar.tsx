@@ -15,12 +15,12 @@ export default function LeftSidebar() {
             <Image src={user.avatarUrl as string} alt="Avatar" width={40} height={40} className="h-10 w-10 rounded-full object-cover" unoptimized />
           ) : (
             <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-sm font-bold">
-              {(user?.name || user?.phone || "U").toString().slice(0, 2).toUpperCase()}
+              {(user?.name || (user as any)?.username || user?.phone || "U").toString().slice(0, 2).toUpperCase()}
             </div>
           )}
           <div>
             <div className="text-sm text-neutral-400">Signed in as</div>
-            <div className="text-base font-semibold text-white">{user?.name || user?.phone || "User"}</div>
+            <div className="text-base font-semibold text-white">{user?.name || (user as any)?.username || user?.phone || "User"}</div>
           </div>
         </div>
         <nav className="bg-[#181818] rounded-xl p-2">

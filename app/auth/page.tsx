@@ -4,8 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuthContext } from "@/contexts/auth-context";
-import { ADMIN_PHONE, PASSWORD_MIN_LENGTH } from "@/lib/constants";
-import { isValidPhoneInput, normalizePhoneForE164 } from "@/lib/phone";
+import { ADMIN_PHONE, PASSWORD_MIN_LENGTH, USERNAME_REGEX } from "@/lib/constants";
 import type { AuthMode, MessageDescriptor } from "@/lib/types";
 
 const authModes: AuthMode[] = ["login", "register"];
@@ -46,7 +45,7 @@ const AuthPage = () => {
   } = useAuthContext();
 
   const [authMode, setAuthMode] = useState<AuthMode>("login");
-  const [phone, setPhone] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   // Invite removed from signup flow
@@ -83,7 +82,7 @@ const AuthPage = () => {
       return false;
     }
 
-    if (!isValidPhoneInput(phone)) {
+    if (!USERNAME_REGEX.test(username.trim())) {
       return false;
     }
 
@@ -98,23 +97,23 @@ const AuthPage = () => {
     // No invite required
 
     return true;
-  }, [authMode, confirmPassword, isBusy, password, phone]);
+  }, [authMode, confirmPassword, isBusy, password, username]);
 
   // Inline error messages
-  const phoneError = !isValidPhoneInput(phone) ? "Утасны дугаарыг зөв оруулна уу." : "";
+  const phoneError = !USERNAME_REGEX.test(username.trim()) ? "Username 3–32 тэмдэгт (A–Z, 0–9, . _ -)" : "";
   const passwordError = password.trim().length < PASSWORD_MIN_LENGTH ? `Нууц үг хамгийн багадаа ${PASSWORD_MIN_LENGTH} тэмдэгт.` : "";
   const confirmError = authMode === "register" && password.trim() !== confirmPassword.trim() ? "Нууц үгийн баталгаажуулалт тохирохгүй." : "";
 
   const primaryLabel = authMode === "register" ? "Бүртгүүлэх" : "Нэвтрэх";
 
-  const getNormalizedPhone = (raw: string): string => normalizePhoneForE164(raw);
+  const getNormalizedUsername = (raw: string): string => String(raw || "").trim();
 
   const handleRegistration = async () => {
-    const trimmedPhone = phone.trim();
-    const normalizedPhone = getNormalizedPhone(trimmedPhone);
+    const trimmed = username.trim();
+    const normalized = getNormalizedUsername(trimmed);
 
-    if (!isValidPhoneInput(trimmedPhone) || !normalizedPhone) {
-      setMessage({ tone: "error", text: "Утасны дугаарыг зөв оруулна уу." });
+    if (!USERNAME_REGEX.test(normalized)) {
+      setMessage({ tone: "error", text: "Username буруу байна." });
       return;
     }
 
@@ -131,7 +130,7 @@ const AuthPage = () => {
     setStatus("submitting");
     setMessage(null);
 
-    const result = await registerUser({ phone: normalizedPhone, password: password.trim() });
+    const result = await registerUser({ username: normalized, password: password.trim() });
     setStatus("idle");
 
     if (result.ok) {
@@ -143,11 +142,11 @@ const AuthPage = () => {
   };
 
   const handleLogin = async () => {
-    const trimmedPhone = phone.trim();
-    const normalizedPhone = getNormalizedPhone(trimmedPhone);
+    const trimmed = username.trim();
+    const normalized = getNormalizedUsername(trimmed);
 
-    if (!isValidPhoneInput(trimmedPhone) || !normalizedPhone) {
-      setMessage({ tone: "error", text: "Утасны дугаарыг дахин шалгаарай." });
+    if (!USERNAME_REGEX.test(normalized)) {
+      setMessage({ tone: "error", text: "Username буруу байна." });
       return;
     }
 
@@ -160,8 +159,8 @@ const AuthPage = () => {
     setMessage(null);
 
     const digits = (v: unknown) => String(v || "").replace(/\D/g, "");
-    if (digits(normalizedPhone) === digits(ADMIN_PHONE)) {
-      const adminResult = await adminLogin({ phone: normalizedPhone, password: password.trim() });
+    if (digits(normalized) === digits(ADMIN_PHONE)) {
+      const adminResult = await adminLogin({ phone: normalized, password: password.trim() });
       setStatus("idle");
 
       if (adminResult.ok) {
@@ -173,7 +172,7 @@ const AuthPage = () => {
       return;
     }
 
-    const result = await loginUser({ phone: normalizedPhone, password: password.trim() });
+    const result = await loginUser({ username: normalized, password: password.trim() });
     setStatus("idle");
 
     if (result.ok) {
@@ -210,7 +209,7 @@ const AuthPage = () => {
 
   const handleLogout = () => {
     logout();
-    setPhone("");
+    setUsername("");
     setPassword("");
     setConfirmPassword("");
     setMessage({ tone: "info", text: "Сесс дууслаа." });
@@ -285,21 +284,21 @@ const AuthPage = () => {
 
           <form onSubmit={handleSubmit}>
             <label className="block">
-              <span className="text-sm font-medium text-white">Утасны дугаар</span>
+              <span className="text-sm font-medium text-white">Username</span>
               <input
-                autoComplete="tel"
+                autoComplete="username"
                 className={`${baseInputClass} ${touchedPhone && phoneError ? "border-rose-500 focus:ring-rose-500/30" : "border-black/80 focus:border-[var(--focus)]"}`}
                 style={{
                   // focus glow color
                   // expose CSS var for Tailwind-less custom shade
                   ['--focus']: FOCUS,
                 } as React.CSSProperties}
-                placeholder="99112233"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
+                placeholder="username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
                 onBlur={() => setTouchedPhone(true)}
                 disabled={isBusy}
-                inputMode="numeric"
+                inputMode="text"
               />
               {touchedPhone && phoneError && (
                 <span className="mt-1 block text-xs text-rose-600">{phoneError}</span>

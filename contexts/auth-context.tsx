@@ -14,7 +14,7 @@ import {
   ADMIN_PROFILE_STORAGE_KEY,
   ADMIN_TOKEN_STORAGE_KEY,
   PASSWORD_MIN_LENGTH,
-  PHONE_REGEX,
+  USERNAME_REGEX,
   TOKEN_STORAGE_KEY,
   USER_STORAGE_KEY,
 } from "../lib/constants";
@@ -32,8 +32,8 @@ type AuthContextValue = {
   adminToken: string | null;
   adminProfile: AdminProfile | null;
   hydrated: boolean;
-  register: (payload: { phone: string; password: string; name?: string }) => Promise<ActionResult<AuthenticatedUser>>;
-  login: (payload: { phone: string; password: string }) => Promise<ActionResult<AuthenticatedUser>>;
+  register: (payload: { username: string; password: string; name?: string }) => Promise<ActionResult<AuthenticatedUser>>;
+  login: (payload: { username: string; password: string }) => Promise<ActionResult<AuthenticatedUser>>;
   changePassword: (payload: { currentPassword: string; newPassword: string }) => Promise<ActionResult>;
   adminLogin: (payload: { phone: string; password: string }) => Promise<ActionResult<AdminProfile>>;
   fetchProfile: () => Promise<ActionResult<AuthenticatedUser>>;
@@ -155,10 +155,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [persistToken, persistUser, token]);
 
   const register = useCallback(
-    async ({ phone, password, name }: { phone: string; password: string; name?: string }): Promise<ActionResult<AuthenticatedUser>> => {
-      const normalizedPhone = normalizePhoneForE164(phone);
-      if (!normalizedPhone || !PHONE_REGEX.test(normalizedPhone)) {
-        return { ok: false, error: "Утасны дугаарыг зөв оруулна уу." };
+    async ({ username, password, name }: { username: string; password: string; name?: string }): Promise<ActionResult<AuthenticatedUser>> => {
+      const normalized = String(username || "").trim();
+      if (!USERNAME_REGEX.test(normalized)) {
+        return { ok: false, error: "Username 3–32 тэмдэгт (A–Z, 0–9, . _ -)" };
       }
 
       if (password.trim().length < PASSWORD_MIN_LENGTH) {
@@ -170,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/users/register", {
         method: "POST",
-        body: JSON.stringify({ phone: normalizedPhone, password, name }),
+        body: JSON.stringify({ username: normalized, password, name }),
       });
 
       if (isSuccess(response)) {
@@ -187,10 +187,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const login = useCallback(
-    async ({ phone, password }: { phone: string; password: string }): Promise<ActionResult<AuthenticatedUser>> => {
-      const normalizedPhone = normalizePhoneForE164(phone);
-      if (!normalizedPhone || !PHONE_REGEX.test(normalizedPhone)) {
-        return { ok: false, error: "Утасны дугаарыг дахин шалгаарай." };
+    async ({ username, password }: { username: string; password: string }): Promise<ActionResult<AuthenticatedUser>> => {
+      const normalized = String(username || "").trim();
+      if (!USERNAME_REGEX.test(normalized)) {
+        return { ok: false, error: "Username буруу байна." };
       }
 
       if (password.trim().length < PASSWORD_MIN_LENGTH) {
@@ -202,7 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/users/login", {
         method: "POST",
-        body: JSON.stringify({ phone: normalizedPhone, password }),
+        body: JSON.stringify({ username: normalized, password }),
       });
 
       if (isSuccess(response)) {

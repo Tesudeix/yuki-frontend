@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { BASE_URL } from "../../lib/config";
 
-type User = { id?: string; _id?: string; name?: string | null; phone?: string };
+type User = { id?: string; _id?: string; name?: string | null; phone?: string; username?: string | null };
 type Post = { _id: string; user?: User; likes?: unknown[]; comments?: unknown[]; shares?: number };
 
 type Member = { id: string; name: string; phone?: string; score: number; posts: number };
@@ -26,7 +26,7 @@ export default function TopMembers() {
           const id = (u.id || u._id || "") as string;
           if (!id) continue;
           const score = (p.likes?.length || 0) + (p.comments?.length || 0) + (p.shares || 0);
-          const name = (u.name || u.phone || "User") as string;
+          const name = (u.name || u.username || u.phone || "User") as string;
           const prev = map.get(id);
           if (prev) {
             prev.score += score;

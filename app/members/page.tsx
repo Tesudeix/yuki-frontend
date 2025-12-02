@@ -5,7 +5,7 @@ import Image from "next/image";
 import { BASE_URL } from "@/lib/config";
 import { useAuthContext } from "@/contexts/auth-context";
 
-type Member = { id: string; name?: string | null; phone?: string | null; avatarUrl?: string | null; createdAt?: string | null };
+type Member = { id: string; name?: string | null; username?: string | null; phone?: string | null; avatarUrl?: string | null; createdAt?: string | null };
 
 export default function MembersPage() {
   const { token } = useAuthContext();
@@ -39,8 +39,8 @@ export default function MembersPage() {
 
   const filtered = useMemo(() => members, [members]);
 
-  const initials = (name?: string | null, phone?: string | null) => {
-    const base = (name || phone || "U").trim();
+  const initials = (name?: string | null, username?: string | null, phone?: string | null) => {
+    const base = (name || username || phone || "U").trim();
     const parts = base.split(/\s+/);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -75,15 +75,15 @@ export default function MembersPage() {
                   {filtered.map((m) => (
                     <article key={m.id} className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
                       {m.avatarUrl ? (
-                        <Image src={m.avatarUrl} alt={m.name || m.phone || "avatar"} width={48} height={48} className="h-12 w-12 rounded-full object-cover" unoptimized />
+                        <Image src={m.avatarUrl} alt={m.name || m.username || m.phone || "avatar"} width={48} height={48} className="h-12 w-12 rounded-full object-cover" unoptimized />
                       ) : (
                         <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold">
-                          {initials(m.name, m.phone)}
+                          {initials(m.name, m.username, m.phone)}
                         </div>
                       )}
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">{m.name || m.phone || "Member"}</div>
-                        {m.phone && <div className="truncate text-xs text-neutral-400">{m.phone}</div>}
+                        <div className="truncate text-sm font-semibold">{m.name || m.username || m.phone || "Member"}</div>
+                        {(m.username || m.phone) && <div className="truncate text-xs text-neutral-400">{m.username || m.phone}</div>}
                       </div>
                     </article>
                   ))}
