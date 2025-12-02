@@ -67,7 +67,7 @@ export default function PostInput({ onPost, initialCategory }: Props) {
   };
 
   const avatarUrl = typeof user?.avatarUrl === "string" && user.avatarUrl ? user.avatarUrl : "";
-  const initials = (user?.name || (user as any)?.username || user?.phone || "U").toString().slice(0, 2).toUpperCase();
+  const initials = (user?.name || user?.username || user?.phone || "U").toString().slice(0, 2).toUpperCase();
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="w-full p-4 border-b border-neutral-800 flex gap-3">

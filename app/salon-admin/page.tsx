@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/auth-context";
 import { apiRequest, isSuccess } from "@/lib/api-client";
@@ -27,13 +27,6 @@ export default function SalonAdminHome() {
     void fetchBranches();
   }, [adminToken, hydrated, router]);
 
-  useEffect(() => { void fetchBookings(); }, [date, branchId]);
-
-  const fetchBranches = async () => {
-    const res = await apiRequest<{ branches: Branch[] }>("/api/branches");
-    if (isSuccess(res)) setBranches(res.branches || []);
-  };
-
   const fetchBookings = async () => {
     if (!headers) return;
     setLoading(true);
@@ -44,6 +37,17 @@ export default function SalonAdminHome() {
     if (isSuccess(res)) setBookings(res.bookings || []);
     setLoading(false);
   };
+
+  const fetchBookingsCb = useCallback(fetchBookings, [headers, date, branchId]);
+
+  useEffect(() => { void fetchBookingsCb(); }, [fetchBookingsCb]);
+
+  const fetchBranches = async () => {
+    const res = await apiRequest<{ branches: Branch[] }>("/api/branches");
+    if (isSuccess(res)) setBranches(res.branches || []);
+  };
+
+  // fetchBookings moved above and memoized as fetchBookingsCb
 
   return (
     <main className="mx-auto max-w-4xl p-6">
@@ -90,4 +94,3 @@ export default function SalonAdminHome() {
     </main>
   );
 }
-

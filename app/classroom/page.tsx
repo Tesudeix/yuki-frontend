@@ -46,9 +46,8 @@ export default function ClassroomPage() {
   // Superadmin controls: grant classroom access by phone
   const isSuperAdmin = useMemo(() => {
     const digits = (v: unknown) => String(v || "").replace(/\D/g, "");
-    const up = user as any;
-    return Boolean((user?.phone && digits(user.phone) === digits(ADMIN_PHONE)) || (up?.username && digits(up.username) === digits(ADMIN_PHONE)));
-  }, [user?.phone]);
+    return Boolean((user?.phone && digits(user.phone) === digits(ADMIN_PHONE)) || (user?.username && digits(user.username) === digits(ADMIN_PHONE)));
+  }, [user]);
   const [grantPhone, setGrantPhone] = useState("");
   const [grantBusy, setGrantBusy] = useState(false);
   const grantAccess = async (access: boolean) => {

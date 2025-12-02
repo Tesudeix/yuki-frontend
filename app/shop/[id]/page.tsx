@@ -26,9 +26,8 @@ export default function ProductDetailPage() {
 
   const isSuperAdmin = useMemo(() => {
     const d = (v: unknown) => String(v || "").replace(/\D/g, "");
-    const up = user as any;
-    return Boolean((user?.phone && d(user.phone) === d(ADMIN_PHONE)) || (up?.username && d(up.username) === d(ADMIN_PHONE)));
-  }, [user?.phone]);
+    return Boolean((user?.phone && d(user.phone) === d(ADMIN_PHONE)) || (user?.username && d(user.username) === d(ADMIN_PHONE)));
+  }, [user]);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +62,7 @@ export default function ProductDetailPage() {
       }
     };
     load();
-  }, [BASE_URL, id]);
+  }, [id]);
 
   const updateProduct = async () => {
     if (!token || !product) return;

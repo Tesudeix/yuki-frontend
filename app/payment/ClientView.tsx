@@ -53,7 +53,7 @@ function CheckIcon({ className = "" }: { className?: string }) {
 export default function ClientView() {
   const [mounted, setMounted] = useState(false);
   const usersRef = useRef<HTMLDivElement | null>(null);
-  const [members, setMembers] = useState<Array<{ id: string; name?: string | null; phone?: string | null; avatarUrl?: string | null }>>([]);
+  const [members, setMembers] = useState<Array<{ id: string; name?: string | null; username?: string | null; phone?: string | null; avatarUrl?: string | null }>>([]);
   const [total, setTotal] = useState<number>(0);
   const { user, token, fetchProfile } = useAuthContext();
   const router = useRouter();
@@ -110,7 +110,7 @@ export default function ClientView() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-neutral-400">Миний бүртгэл</div>
-              <div className="text-base font-semibold text-white">{user?.name || (user as any)?.username || user?.phone || "Зочин"}</div>
+              <div className="text-base font-semibold text-white">{user?.name || user?.username || user?.phone || "Зочин"}</div>
               <div className="text-xs text-neutral-400">Төлөв: {user?.classroomAccess ? "Идэвхтэй гишүүн" : "Идэвхгүй"}</div>
             </div>
             <div className="flex gap-2">
@@ -197,7 +197,7 @@ export default function ClientView() {
                 </div>
                 <div className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm">
                   <div className="text-neutral-300">Гүйлгээний утга</div>
-                  <div className="truncate font-medium text-white">{(user as any)?.username || user?.name || user?.phone || "Username/нэр"}</div>
+                  <div className="truncate font-medium text-white">{user?.username || user?.name || user?.phone || "Username/нэр"}</div>
                   <div className="text-xs text-neutral-400">Та заавал утас эсвэл нэрээ бичээрэй.</div>
                 </div>
                 <button onClick={() => alert("Төлбөр шалгагдсаны дараа гишүүнчлэл идэвхжинэ. Хэрэв 10 минутын дотор идэвхжихгүй бол 94641031 дугаарруу холбогдоно уу.")} className="mt-2 rounded-md bg-[#1080CA] px-4 py-2 text-sm font-semibold text-white">Төлбөр төлсөн</button>
@@ -216,13 +216,13 @@ export default function ClientView() {
             {members.map((m) => (
               <div key={m.id} className="w-28 shrink-0 snap-start rounded-md border border-neutral-800 bg-neutral-950 p-3 text-center">
                 {m.avatarUrl ? (
-                  <Image src={m.avatarUrl} alt={m.name || (m as any)?.username || m.phone || "avatar"} width={48} height={48} className="mx-auto h-12 w-12 rounded-full object-cover" unoptimized />
+                  <Image src={m.avatarUrl} alt={m.name || m.username || m.phone || "avatar"} width={48} height={48} className="mx-auto h-12 w-12 rounded-full object-cover" unoptimized />
                 ) : (
                   <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold">
-                    {(m.name || (m as any)?.username || m.phone || "U").toString().slice(0, 2).toUpperCase()}
+                    {(m.name || m.username || m.phone || "U").toString().slice(0, 2).toUpperCase()}
                   </div>
                 )}
-                <div className="mt-2 truncate text-xs text-neutral-300">{m.name || (m as any)?.username || m.phone || "Member"}</div>
+                <div className="mt-2 truncate text-xs text-neutral-300">{m.name || m.username || m.phone || "Member"}</div>
               </div>
             ))}
           </div>

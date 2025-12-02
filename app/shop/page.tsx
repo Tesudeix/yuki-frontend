@@ -25,9 +25,8 @@ export default function ShopPage() {
   const searchParams = useSearchParams();
   const isSuperAdmin = useMemo(() => {
     const digits = (v: unknown) => String(v || "").replace(/\D/g, "");
-    const up = user as any;
-    return Boolean((user?.phone && digits(user.phone) === digits(ADMIN_PHONE)) || (up?.username && digits(up.username) === digits(ADMIN_PHONE)));
-  }, [user?.phone]);
+    return Boolean((user?.phone && digits(user.phone) === digits(ADMIN_PHONE)) || (user?.username && digits(user.username) === digits(ADMIN_PHONE)));
+  }, [user]);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

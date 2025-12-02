@@ -130,7 +130,7 @@ export default function SiteHeader() {
                   />
                 ) : (
                   <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white">
-              {initialsFromName(user?.name || (user as any)?.username || user?.phone || "U")}
+              {initialsFromName(user?.name || user?.username || user?.phone || "U")}
                   </div>
                 )}
                 <ChevronDownIcon className="h-4 w-4 text-neutral-500" />
