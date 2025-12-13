@@ -69,7 +69,7 @@ const AdminPage = () => {
   const [inviteDays, setInviteDays] = useState("30");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [members, setMembers] = useState<{ id: string; name?: string | null; phone?: string | null; classroomAccess?: boolean; membershipExpiresAt?: string | null }[]>([]);
-  const [memberQuery, setMemberQuery] = useState("");
+  const [memberQuery] = useState("");
 
   const resolveError = useCallback((payload: Parameters<typeof resolveErrorMessage>[0], fallback: string) => {
     return resolveErrorMessage(payload, fallback);

@@ -93,7 +93,7 @@ export default function FeedPage() {
                 className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#0D81CA] text-white" : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"}`}
                 onClick={() => setCategory(c)}
               >
-                {({ All: "Бүгд", General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}
+                {({ All: "Бүгд", General: "Ерөнхий", News: "news", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}
               </button>
             ))}
           </div>
