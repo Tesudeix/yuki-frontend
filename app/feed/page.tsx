@@ -137,7 +137,7 @@ export default function FeedPage() {
               />
             ))}
             {!loading && posts.length === 0 && (
-              <div className="text-center py-6 text-sm text-neutral-400">Here аsнгилалд одоогоор пост байхгүй.</div>
+              <div className="text-center py-6 text-sm text-neutral-400">Hereу аsнгилалд одоогоор пост байхгүй.</div>
             )}
             {/* Bottom skeleton while loading more */}
             {loading && posts.length > 0 && (
