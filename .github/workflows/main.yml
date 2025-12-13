@@ -1,24 +1,13 @@
-name: Deploy Frontend Code
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd /root/yuki-frontend
-            git pull origin main
-            npm install
-            npm run build
-            pm2 restart yuki-frontend || pm2 start npm --name "yuki-frontend" -- start
+- name: Deploy via SSH
+  uses: appleboy/ssh-action@v1
+  with:
+    host: ${{ secrets.SSH_HOST }}
+    username: ${{ secrets.SSH_USER }}
+    key: ${{ secrets.SSH_KEY }}
+    port: 22  # specify if non-default
+    script: |
+      cd /root/yuki-frontend
+      git pull origin main
+      npm install
+      npm run build
+      pm2 restart yuki-frontend || pm2 start npm --name "yuki-frontend" -- start
