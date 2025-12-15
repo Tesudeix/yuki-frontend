@@ -5,7 +5,20 @@ import Image from "next/image";
 import { useAuthContext } from "@/contexts/auth-context";
 import { BASE_URL, UPLOADS_URL } from "@/lib/config";
 import { ADMIN_PHONE, PRODUCT_CATEGORIES } from "@/lib/constants";
-import { Copy } from "lucide-react";
+// Inline copy icon to avoid external dependency
+function CopyIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path d="M16 1H6a2 2 0 0 0-2 2v10h2V3h10V1Zm3 4H10a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 14H10V7h9v12Z" />
+    </svg>
+  );
+}
 
 type Product = {
   _id: string;
@@ -246,7 +259,7 @@ function ShopPaymentOverlay({ name, price, onClose }: { name: string; price: str
               <div className="text-xs text-neutral-400">Эзэмшигч: {accountHolder}</div>
             </div>
             <button onClick={() => copy(accountNo)} className="ml-3 inline-flex items-center gap-1 rounded border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:border-neutral-600">
-              <Copy className="h-3.5 w-3.5" /> Хуулах
+              <CopyIcon className="h-3.5 w-3.5" /> Хуулах
             </button>
           </div>
           <div className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-300">

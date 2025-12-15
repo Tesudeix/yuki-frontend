@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ok: false, error: "Token байхгүй байна." };
     }
 
-    const response = await apiRequest<{ user: AuthenticatedUser }>("/users/profile", {
+    const response = await apiRequest<{ user: AuthenticatedUser }>("/api/users/profile", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -168,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/users/register", {
+      const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({ phone: normalizedPhone, password, name }),
       });
@@ -200,7 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/users/login", {
+      const response = await apiRequest<{ token: string; user: AuthenticatedUser }>("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ phone: normalizedPhone, password }),
       });
