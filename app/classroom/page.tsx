@@ -51,7 +51,7 @@ export default function ClassroomPage() {
     if (!isSuperAdmin || !token) return;
     setGrantBusy(true);
     try {
-      const res = await fetch(`${BASE_URL}/users/admin/grant-classroom`, {
+      const res = await fetch(`${BASE_URL}/api/admin/grant-classroom`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ phone: grantPhone, access }),

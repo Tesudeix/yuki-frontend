@@ -101,7 +101,7 @@ export default function ProfilePage() {
         "X-User-Id": myId,
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
-      const patchRes = await fetch(`${BASE_URL}/users/profile/avatar`, {
+      const patchRes = await fetch(`${BASE_URL}/api/users/profile/avatar`, {
         method: "PATCH",
         headers,
         body: JSON.stringify({ avatarUrl: downloadUrl }),

@@ -16,6 +16,7 @@ export default function FeedPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState<"All" | "General" | "News" | "Tools" | "Tasks">("All");
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,17 +27,31 @@ export default function FeedPage() {
 
   const fetchPage = useCallback(async (p: number, append = false) => {
     setLoading(true);
+    setError(null);
     try {
       const url = new URL(`${BASE_URL}/api/posts`);
       url.searchParams.set("page", String(p));
       url.searchParams.set("limit", "10");
       if (category !== "All") url.searchParams.set("category", category);
       const res = await fetch(url.toString(), { cache: "no-store" });
-      const data = await res.json();
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        console.error("Feed load failed", res.status, res.statusText, body);
+        setError(`Feed load failed (${res.status})`);
+        setHasMore(false);
+        return;
+      }
+      const data = await res.json().catch(() => null);
       if (Array.isArray(data)) {
         setPosts((prev) => (append ? [...prev, ...data] : data));
         setHasMore(data.length === 10);
+      } else {
+        console.error("Unexpected response for posts list", data);
+        setError("Unexpected response from server");
       }
+    } catch (e) {
+      console.error("Feed request error", e);
+      setError("Network error while loading feed");
     } finally {
       setLoading(false);
     }
@@ -105,6 +120,11 @@ export default function FeedPage() {
           )}
 
           <section className="grid gap-4">
+            {error && (
+              <div className="rounded-md border border-rose-900 bg-rose-950/50 px-3 py-2 text-sm text-rose-300">
+                {error}
+              </div>
+            )}
             {/* First-load skeletons */}
             {loading && posts.length === 0 && (
               <>

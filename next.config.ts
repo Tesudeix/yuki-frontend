@@ -26,6 +26,24 @@ const nextConfig: NextConfig = {
         source: "/api-proxy/:path*",
         destination: `${backend}/:path*`,
       },
+      // Proxy first-class API-style routes directly so client fetches like `${BASE_URL}/api/*` work
+      {
+        source: "/api/:path*",
+        destination: `${backend}/api/:path*`,
+      },
+      // Non-`/api` routes used by the app (map to backend /api/* counterparts)
+      {
+        source: "/users/:path*",
+        destination: `${backend}/api/users/:path*`,
+      },
+      {
+        source: "/admin/:path*",
+        destination: `${backend}/api/admin/:path*`,
+      },
+      {
+        source: "/upload",
+        destination: `${backend}/upload`,
+      },
       {
         source: "/files/:path*",
         destination: `${backend}/files/:path*`,

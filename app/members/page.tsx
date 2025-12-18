@@ -17,7 +17,7 @@ export default function MembersPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const url = new URL(`${BASE_URL}/users/members`);
+      const url = new URL(`${BASE_URL}/api/users/members`);
       url.searchParams.set("limit", "200");
       if (q.trim()) url.searchParams.set("q", q.trim());
       const res = await fetch(url.toString(), { cache: "no-store" });
