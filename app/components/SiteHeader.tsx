@@ -10,8 +10,9 @@ type NavLink = { href: string; label: string };
 
 const coreNav: NavLink[] = [
   { href: "/", label: "Home" },
-  { href: "/feed", label: "Community" },
-  { href: "/classroom", label: "Classroom" },
+  { href: "/community", label: "Community" },
+  { href: "/story", label: "Story" },
+  { href: "/classroom", label: "Contents" },
 ];
 
 const extraNav: NavLink[] = [
@@ -25,6 +26,13 @@ const initialsFromName = (value: string): string => {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 };
 
+const CreditsPill = ({ value }: { value: number }) => (
+  <div className="inline-flex items-center gap-2 rounded-full border border-[#1400FF]/35 bg-[#1400FF]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c6c3ff]">
+    <span className="h-1.5 w-1.5 rounded-full bg-[#1400FF]" aria-hidden />
+    Credit {value.toLocaleString("en-US")}
+  </div>
+);
+
 export default function SiteHeader() {
   const { user, token, hydrated, logout } = useAuthContext();
   const router = useRouter();
@@ -33,9 +41,10 @@ export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const credits = typeof user?.credits === "number" ? user.credits : 0;
 
   const activeStartsWith = useMemo(
-    () => (href: string) => (pathname || "").startsWith(href),
+    () => (href: string) => (href === "/" ? pathname === "/" : (pathname || "").startsWith(href)),
     [pathname],
   );
 
@@ -63,7 +72,7 @@ export default function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0A0A0A] shadow-[0_2px_20px_rgba(0,0,0,0.3)]">
+    <header className="sticky top-0 z-50 border-b border-white/5 bg-black/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
       {/* Main bar */}
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
         {/* Left: Mobile burger + Logo (mobile), Logo (desktop) */}
@@ -71,7 +80,7 @@ export default function SiteHeader() {
           {/* Burger only on mobile */}
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-neutral-300 hover:bg-neutral-800 md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-neutral-300 hover:bg-white/5 md:hidden"
             onClick={() => setMobileOpen(true)}
             aria-label="Цэс нээх"
             aria-expanded={mobileOpen}
@@ -82,7 +91,7 @@ export default function SiteHeader() {
           {/* Logo (centered on mobile via flex grow) */}
           <div className="flex flex-1 justify-center md:flex-initial md:justify-start">
             <Link href="/" className="inline-flex items-center gap-2 font-semibold text-white">
-              <span>TESUDEIX</span>
+              <span>Antaqor</span>
             </Link>
           </div>
         </div>
@@ -95,8 +104,8 @@ export default function SiteHeader() {
                 key={link.href}
                 href={link.href}
                 className={
-                  "rounded-md px-3 py-2 text-[18px] transition-colors hover:text-white " +
-                  (activeStartsWith(link.href) ? "text-white" : "text-[#BDBDBD]")
+                  "rounded-md px-3 py-2 text-[18px] transition-colors hover:text-[#1400FF] " +
+                  (activeStartsWith(link.href) ? "text-white" : "text-neutral-400")
                 }
               >
                 {link.label}
@@ -107,6 +116,7 @@ export default function SiteHeader() {
 
         {/* Right: Actions */}
         <div className="hidden items-center gap-2 md:flex">
+          <CreditsPill value={credits} />
           {!hydrated ? (
             <div className="h-8 w-24 animate-pulse rounded-md bg-neutral-800" />
           ) : token ? (
@@ -114,7 +124,7 @@ export default function SiteHeader() {
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-2 py-1 hover:bg-neutral-800"
+                className="flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-2 py-1 hover:bg-white/5"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
               >
@@ -128,19 +138,17 @@ export default function SiteHeader() {
                     unoptimized
                   />
                 ) : (
-                  <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white">
+                  <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-[#1400FF] via-[#3522FF] to-[#050508] text-xs font-bold text-white">
                     {initialsFromName(user?.name || user?.phone || "U")}
                   </div>
                 )}
                 <ChevronDownIcon className="h-4 w-4 text-neutral-500" />
               </button>
 
-              {/* Settings icon removed on desktop */}
-
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-md border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
+                className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-neutral-200 hover:bg-white/5"
               >
                 Гарах
               </button>
@@ -148,17 +156,17 @@ export default function SiteHeader() {
               {menuOpen && (
                 <div
                   role="menu"
-                  className="absolute right-0 mt-2 w-44 overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 py-1 shadow-lg"
+                  className="absolute right-0 mt-2 w-44 overflow-hidden rounded-md border border-white/10 bg-[#0b0b12] py-1 shadow-lg"
                 >
                   <Link
                     href="/profile"
-                    className="block px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
+                    className="block px-3 py-2 text-sm text-neutral-200 hover:bg-white/5"
                     onClick={() => setMenuOpen(false)}
                   >
                     Профайл
                   </Link>
                   <button
-                    className="block w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-neutral-800"
+                    className="block w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-white/5"
                     onClick={handleLogout}
                   >
                     Гарах
@@ -166,63 +174,62 @@ export default function SiteHeader() {
                 </div>
               )}
             </div>
-          ) : isPayment ? (
-            // Payment page: reduce choices, only Login on desktop
-            <Link
-              href="/auth"
-              className="rounded-md border border-neutral-700 px-3 py-1.5 text-sm font-medium text-neutral-200 hover:bg-neutral-800"
-            >
-              Нэвтрэх
-            </Link>
           ) : (
             <>
               <Link
-                href="/payment"
-                className="rounded-md bg-[#0D81CA] px-3 py-1.5 text-sm font-semibold text-white shadow-[0_6px_20px_-8px_rgba(13,129,202,0.6)] transition-opacity hover:opacity-90"
+                href="/auth"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#1400FF]/40 bg-[#1400FF]/10 text-[#b4b0ff] shadow-[0_10px_24px_-16px_rgba(20,0,255,0.7)] transition hover:text-white hover:shadow-[0_12px_28px_-16px_rgba(20,0,255,0.9)]"
+                aria-label="Бүртгүүлэх"
+                title="Бүртгүүлэх"
               >
-                КЛАНД НЭГДЭХ
+                <RegisterIcon className="h-5 w-5" />
               </Link>
               <Link
                 href="/auth"
-                className="rounded-md border border-neutral-700 px-3 py-1.5 text-sm font-medium text-neutral-200 hover:bg-neutral-800"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/60 text-neutral-300 transition hover:text-white"
+                aria-label="Нэвтрэх"
+                title="Нэвтрэх"
               >
-                Нэвтрэх
+                <LoginIcon className="h-5 w-5" />
               </Link>
             </>
           )}
         </div>
 
         {/* Right: Mobile small action */}
-        {!token && (
-          <div className="flex items-center md:hidden">
-            <Link href="/payment" className="text-sm font-semibold text-white hover:opacity-90">
+        <div className="flex items-center gap-2 md:hidden">
+          <CreditsPill value={credits} />
+          {!token && (
+            <Link href="/auth" className="text-sm font-semibold text-white hover:opacity-90">
               НЭГДЭХ
             </Link>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Pink accent line */}
-      <div className="h-px w-full bg-[#0D81CA]/50" />
+      {/* Accent line */}
+      <div className="h-px w-full bg-[linear-gradient(90deg,rgba(20,0,255,0),rgba(20,0,255,0.75),rgba(20,0,255,0))]" />
+
+      {/* Story link moved into main nav */}
 
       {/* Mobile full-screen overlay menu */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-[#000000E6] backdrop-blur-md"
+          className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-xl"
           role="dialog"
           aria-modal="true"
         >
           {/* Soft gradient overlay for depth */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.2),#0D0D0D)]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(20,0,255,0.12),rgba(0,0,0,0.6))]" />
           <div className="relative flex h-full flex-col px-6 pt-6" style={{ paddingBottom: "36px" }}>
             {/* Top bar inside overlay */}
             <div className="flex items-center justify-between">
               <Link href="/" className="text-base font-semibold text-white" onClick={() => setMobileOpen(false)}>
-                TESUDEIX
+                Antaqor
               </Link>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-neutral-300 hover:bg-neutral-800"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-neutral-300 hover:bg-white/5"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Цэс хаах"
               >
@@ -236,7 +243,7 @@ export default function SiteHeader() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-[20px] font-semibold text-white transition-colors hover:text-[#0D81CA]"
+                  className="text-[20px] font-semibold text-white transition-colors hover:text-[#1400FF]"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
@@ -252,14 +259,14 @@ export default function SiteHeader() {
                 <>
                   <Link
                     href="/profile"
-                    className="rounded-md border border-neutral-700 px-4 py-2.5 text-center text-sm font-semibold text-neutral-100 hover:bg-neutral-800"
+                    className="rounded-md border border-white/10 px-4 py-2.5 text-center text-sm font-semibold text-neutral-100 hover:bg-white/5"
                     onClick={() => setMobileOpen(false)}
                   >
                     Профайл руу очих
                   </Link>
                   <button
                     type="button"
-                    className="rounded-md border border-neutral-700 px-4 py-2.5 text-center text-sm font-medium text-neutral-200 hover:bg-neutral-800"
+                    className="rounded-md border border-white/10 px-4 py-2.5 text-center text-sm font-medium text-neutral-200 hover:bg-white/5"
                     onClick={() => { setMobileOpen(false); handleLogout(); }}
                   >
                     Гарах
@@ -268,15 +275,15 @@ export default function SiteHeader() {
               ) : (
                 <>
                   <Link
-                    href="/payment"
-                    className="rounded-md bg-[#0D81CA] px-4 py-2.5 text-center text-sm font-semibold text-white hover:opacity-90"
+                    href="/auth"
+                    className="rounded-md bg-[#1400FF] px-4 py-2.5 text-center text-sm font-semibold text-white hover:opacity-90"
                     onClick={() => setMobileOpen(false)}
                   >
                     КЛАНД НЭГДЭХ
                   </Link>
                   <Link
                     href="/auth"
-                    className="rounded-md border border-neutral-700 px-4 py-2.5 text-center text-sm font-medium text-neutral-200 hover:bg-neutral-800"
+                    className="rounded-md border border-white/10 px-4 py-2.5 text-center text-sm font-medium text-neutral-200 hover:bg-white/5"
                     onClick={() => setMobileOpen(false)}
                   >
                     Нэвтрэх
@@ -331,6 +338,27 @@ function XIcon({ className = "" }: { className?: string }) {
       aria-hidden
     >
       <path d="M6.225 4.811a1 1 0 0 1 1.414 0L12 9.172l4.361-4.361a1 1 0 1 1 1.414 1.414L13.414 10.586l4.361 4.361a1 1 0 1 1-1.414 1.414L12 12l-4.361 4.361a1 1 0 0 1-1.414-1.414l4.361-4.361-4.361-4.361a1 1 0 0 1 0-1.414Z" />
+    </svg>
+  );
+}
+
+function RegisterIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1" />
+      <circle cx="9" cy="7" r="3" />
+      <path d="M19 8v6" />
+      <path d="M16 11h6" />
+    </svg>
+  );
+}
+
+function LoginIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+      <path d="M10 17l5-5-5-5" />
+      <path d="M15 12H3" />
     </svg>
   );
 }

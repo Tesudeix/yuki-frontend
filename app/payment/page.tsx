@@ -1,7 +1,7 @@
 import React from "react";
 
 export const metadata = {
-  title: "Төлбөрийн багц • TESUDEIX",
+  title: "Төлбөрийн багц • Antaqor",
   description: "Invite код авахын тулд тохирох багцаа сонгон төлнө үү.",
 };
 

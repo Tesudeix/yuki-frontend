@@ -67,13 +67,13 @@ export default function PostInput({ onPost, initialCategory }: Props) {
   const initials = (user?.name || user?.phone || "U").toString().slice(0, 2).toUpperCase();
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="w-full p-4 border-b border-neutral-800 flex gap-3">
+    <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="w-full rounded-2xl border border-white/10 bg-black/60 p-4 shadow-[0_12px_30px_-24px_rgba(20,0,255,0.35)] backdrop-blur flex gap-3">
       {/* Avatar (left) */}
       {avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={avatarUrl} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
       ) : (
-        <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white">
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#1400FF] via-[#3522FF] to-[#050508] text-xs font-bold text-white">
           {initials}
         </div>
       )}
@@ -113,7 +113,7 @@ export default function PostInput({ onPost, initialCategory }: Props) {
           <button
             type="submit"
             disabled={posting || (!content.trim() && !imageFile)}
-            className="rounded-full bg-white px-5 py-2 font-semibold text-black hover:bg-neutral-200 disabled:opacity-50"
+            className="rounded-full bg-[#1400FF] px-5 py-2 font-semibold text-white shadow-[0_6px_18px_-10px_rgba(20,0,255,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-12px_rgba(20,0,255,0.7)] disabled:opacity-50"
           >
             Нийтлэх
           </button>

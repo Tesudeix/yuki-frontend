@@ -49,7 +49,7 @@ export default function ShippedMarquee() {
       >
         {loop.map((i, idx) => (
           <span key={`${i.id}-${idx}`} className="inline-flex items-center gap-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1080CA]" />
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1400FF]" />
             {i.text}
           </span>
         ))}

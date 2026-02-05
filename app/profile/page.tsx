@@ -123,14 +123,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#181818] to-[#0A0A0A] text-white">
-      <div className="mx-auto max-w-3xl p-4 grid gap-5">
+    <div className="page-shell text-white">
+      <div className="mx-auto max-w-3xl p-4 grid gap-5 animate-rise">
         {/* Top title */}
         <div className="flex items-center justify-center py-2">
           <h1 className="text-sm font-semibold text-neutral-400">AI Clan • Профайл</h1>
         </div>
         {/* Profile header styled like feed row */}
-        <header className="w-full border-b border-neutral-800 py-5">
+        <header className="w-full border-b border-white/10 py-5">
           <div className="flex items-start gap-3">
             {/* Avatar */}
             {user?.avatarUrl ? (
@@ -143,7 +143,7 @@ export default function ProfilePage() {
                 unoptimized
               />
             ) : (
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-sm font-semibold">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#1400FF] via-[#3522FF] to-[#050508] text-sm font-semibold">
                 {(user?.name || user?.phone || "U").toString().slice(0, 2).toUpperCase()}
               </div>
             )}
@@ -163,7 +163,7 @@ export default function ProfilePage() {
                 <button
                   onClick={onChooseFile}
                   disabled={uploading}
-                  className="inline-flex items-center gap-2 rounded-md border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-1.5 text-sm text-neutral-200 hover:bg-white/5 disabled:opacity-60"
                 >
                   <MdiCamera className="h-4 w-4" />
                   {uploading ? "Uploading..." : "Зураг солих"}
@@ -182,10 +182,10 @@ export default function ProfilePage() {
 
         {/* Pinned banner if not premium */}
         {user && !user.classroomAccess && (
-          <div className="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm text-neutral-200">
+          <div className="rounded-md border border-white/10 bg-black/60 px-4 py-3 text-sm text-neutral-200 backdrop-blur">
             <span className="mr-2">📌</span>
             Community нь Clan гишүүдэд нээлттэй.
-            <a href="/payment" className="ml-2 underline decoration-[#0D81CA] hover:text-white">Clan-д нэгдэх — ₮25,000</a>
+            <a href="/payment" className="ml-2 underline decoration-[#1400FF] hover:text-white">Clan-д нэгдэх — ₮25,000</a>
           </div>
         )}
 
@@ -194,7 +194,7 @@ export default function ProfilePage() {
           {(["All","General","News","Tools","Tasks"] as const).map((c) => (
             <button
               key={c}
-              className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#0D81CA] text-white" : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"}`}
+              className={`rounded-full px-3 py-1 text-sm transition-colors ${category === c ? "bg-[#1400FF] text-white" : "bg-white/5 text-neutral-300 hover:bg-white/10"}`}
               onClick={() => setCategory(c)}
             >
               {({ All: "Бүгд", General: "Ерөнхий", News: "Мэдээ", Tools: "Хэрэгсэл", Tasks: "Даалгавар" } as const)[c]}

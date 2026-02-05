@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import SiteHeader from "@/app/components/SiteHeader";
+import MobileBottomNav from "@/app/components/MobileBottomNav";
+import SiteFooter from "@/app/components/SiteFooter";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space",
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "AI Clan • Feed",
-  description: "Minimal social feed with auth on tesudeix backend",
+  description: "Minimal social feed with auth on Antaqor backend",
 };
 
 export default function RootLayout({
@@ -14,11 +23,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="mn">
-      <body className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#181818] to-[#0A0A0A] font-sans text-neutral-100 antialiased">
+    <html lang="mn" className={spaceGrotesk.variable}>
+      <body className="min-h-screen font-sans text-neutral-100 antialiased">
         <Providers>
           <SiteHeader />
-          {children}
+          <div className="pb-[calc(84px+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
+          <SiteFooter />
+          <MobileBottomNav />
         </Providers>
       </body>
     </html>

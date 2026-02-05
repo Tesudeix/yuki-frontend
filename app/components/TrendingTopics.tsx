@@ -43,7 +43,7 @@ export default function TrendingTopics() {
   }, []);
 
   return (
-    <section className="bg-[#181818] rounded-xl p-4">
+    <section className="rounded-xl border border-white/5 bg-[#0B0B12] p-4">
       <h3 className="text-sm font-semibold mb-3">Трэнд сэдвүүд</h3>
       <ul className="space-y-2 text-sm text-neutral-300">
         {topics.length === 0 && <li className="text-neutral-500">Одоогоор трэнд сэдэв алга</li>}

@@ -186,7 +186,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
   };
 
   return (
-    <article className="relative w-full border-b border-neutral-800 py-5 mb-6 transition-all duration-200">
+    <article className="relative w-full border-b border-white/10 py-5 mb-6 transition-all duration-200">
       <header className="flex items-start gap-3">
         {/* Avatar */}
         {state.user?.avatarUrl ? (
@@ -199,7 +199,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
             unoptimized
           />
         ) : (
-          <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-sm font-semibold text-white">
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#1400FF] via-[#3522FF] to-[#050508] text-sm font-semibold text-white">
             {letter}
           </div>
         )}
@@ -224,18 +224,18 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
               <div
                 ref={menuRef}
                 role="menu"
-                className="absolute right-0 z-20 mt-8 w-40 overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 py-1 text-sm shadow-xl"
+                className="absolute right-0 z-20 mt-8 w-40 overflow-hidden rounded-md border border-white/10 bg-[#0b0b12] py-1 text-sm shadow-xl"
               >
                 {(isSuperAdmin || isOwner) && (
                   <button
-                    className="block w-full px-3 py-2 text-left text-red-400 hover:bg-neutral-800"
+                    className="block w-full px-3 py-2 text-left text-red-400 hover:bg-white/5"
                     onClick={() => { setMenuOpen(false); handleDelete(); }}
                   >
                     Устгах
                   </button>
                 )}
                 <button
-                  className="block w-full px-3 py-2 text-left text-neutral-200 hover:bg-neutral-800"
+                  className="block w-full px-3 py-2 text-left text-neutral-200 hover:bg-white/5"
                   onClick={handleReport}
                 >
                   Report
@@ -278,7 +278,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
               <img src="/icons/comment.svg" alt="хариулах" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
               <span>Хариулах {commentCount ? `(${commentCount})` : ""}</span>
             </button>
-            <button onClick={handleShare} className={`group flex items-center gap-1 hover:text-white transition ${shared ? "text-blue-400" : ""}`}>
+            <button onClick={handleShare} className={`group flex items-center gap-1 hover:text-white transition ${shared ? "text-[#1400FF]" : ""}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/icons/share.svg" alt="дахин нийтлэх" className="h-5 w-5 invert opacity-60 group-hover:opacity-100" />
               <span>Дахин нийтлэх {shareCount ? `(${shareCount})` : ""}</span>
@@ -307,7 +307,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
               <div className="mt-2 flex items-center gap-2">
                 {/* small avatar placeholder */}
                 <div className="h-6 w-6 rounded-full bg-neutral-800" />
-                <div className="flex-1 rounded-full bg-[#1b1b1b] px-3 py-2 text-xs text-neutral-200 shadow-inner">
+                <div className="flex-1 rounded-full bg-[#0b0b12] px-3 py-2 text-xs text-neutral-200 shadow-inner">
                   <input
                     value={replyTexts[c._id] || ""}
                     onChange={(e) => setReplyTexts((s) => ({ ...s, [c._id]: e.target.value }))}
@@ -315,7 +315,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
                     placeholder="Write a reply…"
                   />
                 </div>
-                <button className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white" onClick={() => handleReply(c._id)} aria-label="Send reply">
+                <button className="rounded-full p-2 text-neutral-400 hover:bg-white/5 hover:text-white" onClick={() => handleReply(c._id)} aria-label="Send reply">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/icons/share.svg" alt="илгээх" className="h-4 w-4 invert" />
                 </button>
@@ -324,7 +324,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
           ))}
           <div className="mt-1 flex items-center gap-2">
             <div className="h-7 w-7 rounded-full bg-neutral-800" />
-            <div className="flex-1 rounded-full bg-[#1b1b1b] px-3 py-2 text-sm text-neutral-200 shadow-inner">
+            <div className="flex-1 rounded-full bg-[#0b0b12] px-3 py-2 text-sm text-neutral-200 shadow-inner">
               <input
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
@@ -332,7 +332,7 @@ export default function FeedPostCard({ post, onDelete, onShareAdd }: Props) {
                 placeholder="Write a comment…"
               />
             </div>
-            <button className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white" onClick={handleComment} aria-label="Send comment">
+            <button className="rounded-full p-2 text-neutral-400 hover:bg-white/5 hover:text-white" onClick={handleComment} aria-label="Send comment">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/icons/share.svg" alt="илгээх" className="h-5 w-5 invert" />
             </button>

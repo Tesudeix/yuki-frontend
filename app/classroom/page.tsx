@@ -215,12 +215,12 @@ export default function ClassroomPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-neutral-100">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-8 md:grid-cols-[300px_1fr]">
+    <div className="page-shell text-neutral-100">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-8 md:grid-cols-[300px_1fr] animate-rise">
         {/* Paywall banner for non-members */}
         {!user?.classroomAccess && (
-          <div className="md:col-span-2 rounded-md border border-[#0D81CA]/20 bg-[#0D81CA]/5 px-4 py-3 text-sm text-neutral-200">
-            Classroom нь Clan гишүүдэд нээлттэй. <a href="/payment" className="ml-2 underline decoration-[#0D81CA] hover:text-white">Clan-д нэгдэх — ₮25,000</a>
+          <div className="md:col-span-2 rounded-md border border-[#1400FF]/30 bg-[#1400FF]/10 px-4 py-3 text-sm text-neutral-200 backdrop-blur">
+            Classroom нь Clan гишүүдэд нээлттэй. <a href="/payment" className="ml-2 underline decoration-[#1400FF] hover:text-white">Clan-д нэгдэх — ₮25,000</a>
           </div>
         )}
         {/* Sidebar */}
@@ -228,7 +228,7 @@ export default function ClassroomPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Хичээл</h2>
             <button
-              className="rounded-md border border-neutral-800 px-2 py-1 text-xs hover:bg-neutral-900 md:hidden"
+              className="rounded-md border border-white/10 px-2 py-1 text-xs hover:bg-black/50 md:hidden"
               onClick={() => setSidebarOpen((o) => !o)}
             >
               {sidebarOpen ? "Хаах" : "Нээх"}
@@ -236,14 +236,14 @@ export default function ClassroomPage() {
           </div>
 
           {isSuperAdmin && (
-            <div className="rounded-md border border-neutral-800 bg-neutral-950 p-3">
+            <div className="rounded-md border border-white/10 bg-black/60 p-3">
               <div className="grid gap-2">
                 {isSuperAdmin && (
-                  <div className="rounded-md border border-neutral-800 bg-neutral-900 p-3">
+                  <div className="rounded-md border border-white/10 bg-black/50 p-3">
                     <div className="mb-2 text-sm font-medium">Хичээлийн эрх олгох</div>
                     <div className="grid grid-cols-[1fr_auto_auto] gap-2">
                       <input
-                        className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                        className="w-full rounded border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:border-[#1400FF]"
                         placeholder="Утас (жш: 94641031 эсвэл +97694641031)"
                         value={grantPhone}
                         onChange={(e) => setGrantPhone(e.target.value)}
@@ -267,13 +267,13 @@ export default function ClassroomPage() {
                 )}
                 <div className="flex items-center gap-2 text-xs">
                   <button
-                    className={`rounded px-2 py-1 ${mode === "youtube" ? "bg-[#1080CA] text-white" : "border border-neutral-700"}`}
+                    className={`rounded px-2 py-1 ${mode === "youtube" ? "bg-[#1400FF] text-white" : "border border-white/10"}`}
                     onClick={() => setMode("youtube")}
                   >
                     YouTube
                   </button>
                   <button
-                    className={`rounded px-2 py-1 ${mode === "file" ? "bg-[#1080CA] text-white" : "border border-neutral-700"}`}
+                    className={`rounded px-2 py-1 ${mode === "file" ? "bg-[#1400FF] text-white" : "border border-white/10"}`}
                     onClick={() => setMode("file")}
                   >
                     Upload File
@@ -281,33 +281,33 @@ export default function ClassroomPage() {
                 </div>
                 {mode === "youtube" ? (
                   <input
-                    className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                    className="w-full rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]"
                     placeholder="YouTube холбоос"
                     value={newUrl}
                     onChange={(e) => setNewUrl(e.target.value)}
                   />
                 ) : (
                   <input
-                    className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                    className="w-full rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]"
                     type="file"
                     accept="video/*"
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
                   />
                 )}
                 <input
-                  className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                  className="w-full rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]"
                   placeholder="Хичээлийн гарчиг"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                 />
                 <input
-                  className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                  className="w-full rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]"
                   placeholder="Ангилал (жш, General)"
                   value={newFolder}
                   onChange={(e) => setNewFolder(e.target.value)}
                 />
                 <textarea
-                  className="w-full rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                  className="w-full rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]"
                   placeholder="Товч тайлбар (заавал биш)"
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
@@ -332,12 +332,12 @@ export default function ClassroomPage() {
                   <button
                     disabled={!canSave}
                     onClick={editing ? saveLesson : addLesson}
-                    className="rounded-md bg-[#1080CA] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    className="rounded-md bg-[#1400FF] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
                   >
                     {editing ? "Хадгалах" : "Нэмэх"}
                   </button>
                   {editing ? (
-                    <button onClick={resetForm} className="rounded-md border border-neutral-700 px-3 py-2 text-sm">
+                    <button onClick={resetForm} className="rounded-md border border-white/10 px-3 py-2 text-sm hover:bg-white/5">
                       Болих
                     </button>
                   ) : (
@@ -350,9 +350,9 @@ export default function ClassroomPage() {
 
           <div className="space-y-2">
             {folders.map((f) => (
-              <div key={f} className="overflow-hidden rounded-md border border-neutral-800">
+              <div key={f} className="overflow-hidden rounded-md border border-white/10">
                 <button
-                  className="flex w-full items-center justify-between bg-neutral-950 px-3 py-2 text-left text-sm"
+                  className="flex w-full items-center justify-between bg-black/60 px-3 py-2 text-left text-sm"
                   onClick={() => setOpenFolders((o) => ({ ...o, [f]: !o[f] }))}
                 >
                   <span className="font-medium">{f}</span>
@@ -365,8 +365,8 @@ export default function ClassroomPage() {
                       .map((l) => (
                         <div
                           key={l._id}
-                          className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-neutral-900 ${
-                            selected?._id === l._id ? "bg-neutral-900" : ""
+                          className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-black/50 ${
+                            selected?._id === l._id ? "bg-black/50" : ""
                           }`}
                           onClick={() => setSelected(l)}
                         >
@@ -374,7 +374,7 @@ export default function ClassroomPage() {
                           {isSuperAdmin && (
                             <span className="shrink-0 space-x-2">
                               <button
-                                className="rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-800"
+                                className="rounded border border-white/10 px-2 py-1 text-xs hover:bg-white/5"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   startEdit(l);
@@ -411,7 +411,7 @@ export default function ClassroomPage() {
                 {selected.type === "file" || selected.url.includes("/api/lessons/") ? (
                   <video
                     src={`${selected.url}${selected.url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token || "")}`}
-                    className="h-auto w-full rounded-md border border-neutral-800"
+                    className="h-auto w-full rounded-md border border-white/10"
                     controls
                     preload="metadata"
                   />
@@ -419,7 +419,7 @@ export default function ClassroomPage() {
                   <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
                     <iframe
                       src={`https://www.youtube.com/embed/${ytIdFromUrl(selected.url)}`}
-                      className="absolute left-0 top-0 h-full w-full rounded-md border border-neutral-800"
+                      className="absolute left-0 top-0 h-full w-full rounded-md border border-white/10"
                       allowFullScreen
                     />
                   </div>

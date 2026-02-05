@@ -47,8 +47,8 @@ export default function MembersPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <div className="mx-auto w-full max-w-6xl px-4 py-8">
+    <main className="page-shell text-white">
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 animate-rise">
         <header className="mb-4 flex items-center justify-between">
           <h1 className="text-xl font-bold">Members <span className="text-neutral-400">({total})</span></h1>
           <div className="hidden sm:block" />
@@ -57,7 +57,7 @@ export default function MembersPage() {
         <div className="mb-4">
           <input
             placeholder="Хайх (нэр, утас)"
-            className="w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-sky-500 sm:max-w-sm"
+            className="w-full rounded-md border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:border-[#1400FF] sm:max-w-sm"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") load(); }}
@@ -73,11 +73,11 @@ export default function MembersPage() {
             ? (
                 <>
                   {filtered.map((m) => (
-                    <article key={m.id} className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
+                    <article key={m.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/60 p-3 backdrop-blur">
                       {m.avatarUrl ? (
                         <Image src={m.avatarUrl} alt={m.name || m.phone || "avatar"} width={48} height={48} className="h-12 w-12 rounded-full object-cover" unoptimized />
                       ) : (
-                        <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold">
+                        <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-[#1400FF] via-[#3522FF] to-[#050508] text-xs font-bold">
                           {initials(m.name, m.phone)}
                         </div>
                       )}
@@ -88,7 +88,7 @@ export default function MembersPage() {
                     </article>
                   ))}
                   {!loading && filtered.length === 0 && (
-                    <div className="col-span-full rounded-md border border-neutral-800 bg-neutral-950 p-4 text-center text-sm text-neutral-400">
+                    <div className="col-span-full rounded-md border border-white/10 bg-black/60 p-4 text-center text-sm text-neutral-400 backdrop-blur">
                       Гишүүн олдсонгүй.
                     </div>
                   )}
@@ -97,7 +97,7 @@ export default function MembersPage() {
             : (
                 // Skeletons for non-logged users
                 Array.from({ length: 6 }).map((_, i) => (
-                  <article key={i} className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
+                  <article key={i} className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/60 p-3 backdrop-blur">
                     <div className="h-12 w-12 animate-pulse rounded-full bg-neutral-800" />
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 h-3 w-2/3 animate-pulse rounded bg-neutral-800" />
