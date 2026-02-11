@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useAuthContext } from "@/contexts/auth-context";
@@ -368,6 +369,12 @@ const AdminPage = () => {
               <span className="text-xs text-neutral-400">{adminProfile?.phone ?? "Утасны мэдээлэл алга"}</span>
             </div>
             <div className="flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:gap-3">
+              <Link
+                href="/shop"
+                className="rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/20"
+              >
+                Ecommerce Dashboard
+              </Link>
               <button
                 className="rounded-2xl border border-white/10 px-4 py-2 text-neutral-200 transition hover:border-white/30 hover:bg-white/10"
                 onClick={() => router.push("/community")}

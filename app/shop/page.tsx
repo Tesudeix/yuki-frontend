@@ -1,279 +1,397 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useAuthContext } from "@/contexts/auth-context";
-import { BASE_URL, UPLOADS_URL } from "@/lib/config";
-import { ADMIN_PHONE, PRODUCT_CATEGORIES } from "@/lib/constants";
-// Inline copy icon to avoid external dependency
-function CopyIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden
-    >
-      <path d="M16 1H6a2 2 0 0 0-2 2v10h2V3h10V1Zm3 4H10a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 14H10V7h9v12Z" />
-    </svg>
-  );
-}
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-type Product = {
-  _id: string;
-  name: string;
-  price: number;
-  category: (typeof PRODUCT_CATEGORIES)[number];
-  image?: string | null;
-  description?: string | null;
-  createdAt?: string;
+import { useAuthContext } from "@/contexts/auth-context";
+import { PRODUCT_CATEGORIES } from "@/lib/constants";
+import {
+  createShopProduct,
+  deleteShopProduct,
+  formatMnt,
+  listShopProducts,
+  type ProductCategory,
+  type ShopProduct,
+} from "@/lib/shop-api";
+import { UPLOADS_URL } from "@/lib/config";
+
+type ToastTone = "success" | "error" | "info";
+
+type Toast = {
+  tone: ToastTone;
+  text: string;
+};
+
+const categoryLabels: Record<ProductCategory, string> = {
+  "Хоол": "Хоол",
+  "Хүнс": "Хүнс",
+  "Бөөнний түгээлт": "Бөөнний түгээлт",
+  "Урьдчилсан захиалга": "Урьдчилсан захиалга",
+  "Кофе амттан": "Кофе амттан",
+  "Алкохол": "Алкохол",
+  "Гэр ахуй & хүүхэд": "Гэр ахуй & хүүхэд",
+  "Эргэнэтэд үйлдвэрлэв": "Эргэнэтэд үйлдвэрлэв",
+  "Бэлэг & гоо сайхан": "Бэлэг & гоо сайхан",
+  "Гадаад захиалга": "Гадаад захиалга",
 };
 
 export default function ShopPage() {
-  const { token, user } = useAuthContext();
-  const isSuperAdmin = useMemo(() => Boolean(user?.phone && user.phone === ADMIN_PHONE), [user?.phone]);
+  const { adminToken, adminProfile, hydrated } = useAuthContext();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [overlay, setOverlay] = useState<{ name: string; price: string } | null>(null);
-  const [activeCategory, setActiveCategory] = useState<"All" | (typeof PRODUCT_CATEGORIES)[number]>("All");
+  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [activeCategory, setActiveCategory] = useState<"All" | ProductCategory>("All");
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<Toast | null>(null);
 
-  const load = async (cat?: (typeof PRODUCT_CATEGORIES)[number]) => {
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [category, setCategory] = useState<ProductCategory>(PRODUCT_CATEGORIES[0]);
+  const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const isAdminReady = hydrated && Boolean(adminToken);
+
+  const filteredProducts = useMemo(() => {
+    if (activeCategory === "All") return products;
+    return products.filter((item) => item.category === activeCategory);
+  }, [activeCategory, products]);
+
+  const totals = useMemo(() => {
+    const totalProducts = products.length;
+    const categoriesWithProducts = new Set(products.map((item) => item.category)).size;
+    const totalValue = products.reduce((sum, item) => sum + item.price, 0);
+
+    return {
+      totalProducts,
+      categoriesWithProducts,
+      totalValue,
+    };
+  }, [products]);
+
+  const refreshProducts = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const url = new URL(`${BASE_URL}/api/products`);
-      if (cat) url.searchParams.set("category", cat);
-      const res = await fetch(url.toString(), { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-      setProducts(Array.isArray(data) ? data : []);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Алдаа гарлаа");
+      const data = await listShopProducts();
+      setProducts(data);
+      if (data.length === 0) {
+        setToast({ tone: "info", text: "Одоогоор бүтээгдэхүүн бүртгэлгүй байна." });
+      }
+    } catch (error) {
+      setToast({
+        tone: "error",
+        text: error instanceof Error ? error.message : "Бүтээгдэхүүн татахад алдаа гарлаа.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { void load(activeCategory === "All" ? undefined : activeCategory); }, [activeCategory]);
+  useEffect(() => {
+    void refreshProducts();
+  }, []);
 
-  const formatMNT = (value: number) => {
-    const s = Math.round(value).toString();
-    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const resetForm = () => {
+    setName("");
+    setPrice("");
+    setCategory(PRODUCT_CATEGORIES[0]);
+    setDescription("");
+    setImageFile(null);
   };
 
-  const deleteProduct = async (id: string) => {
-    if (!token) return;
-    const ok = typeof window !== "undefined" ? window.confirm("Энэ барааг устгах уу?") : true;
-    if (!ok) return;
+  const submitProduct = async () => {
+    if (!adminToken) {
+      setToast({ tone: "error", text: "Админ эрхээр нэвтэрнэ үү." });
+      return;
+    }
+
+    const parsedPrice = Number(price.replace(/[^\d]/g, ""));
+    if (!name.trim() || !Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      setToast({ tone: "error", text: "Нэр болон үнийг зөв оруулна уу." });
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      const res = await fetch(`${BASE_URL}/api/products/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+      const created = await createShopProduct(adminToken, {
+        name: name.trim(),
+        price: parsedPrice,
+        category,
+        description: description.trim() || undefined,
+        image: imageFile,
       });
-      if (!res.ok) {
-        const err = (await res.json().catch(() => ({}))) as { error?: unknown };
-        const message = typeof err.error === "string" ? err.error : undefined;
-        throw new Error(message ?? `HTTP ${res.status}`);
-      }
-      setProducts((prev) => prev.filter((p) => p._id !== id));
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Устгах үед алдаа гарлаа");
+
+      setProducts((current) => [created, ...current]);
+      setToast({ tone: "success", text: "Бүтээгдэхүүн амжилттай нэмэгдлээ. YukiMobile дээр автоматаар харагдана." });
+      resetForm();
+    } catch (error) {
+      setToast({
+        tone: "error",
+        text: error instanceof Error ? error.message : "Бүтээгдэхүүн нэмэх үед алдаа гарлаа.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const removeProduct = async (id: string) => {
+    if (!adminToken) {
+      setToast({ tone: "error", text: "Админ эрхээр нэвтэрнэ үү." });
+      return;
+    }
+
+    const ok = typeof window !== "undefined" ? window.confirm("Энэ бүтээгдэхүүнийг устгах уу?") : true;
+    if (!ok) return;
+
+    try {
+      await deleteShopProduct(adminToken, id);
+      setProducts((current) => current.filter((item) => item._id !== id));
+      setToast({ tone: "success", text: "Бүтээгдэхүүн устгагдлаа." });
+    } catch (error) {
+      setToast({
+        tone: "error",
+        text: error instanceof Error ? error.message : "Бүтээгдэхүүн устгах үед алдаа гарлаа.",
+      });
     }
   };
 
   return (
-    <main className="page-shell text-white">
-      <div className="mx-auto max-w-6xl px-4 py-8 animate-rise">
-        <header className="mb-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Дэлгүүр</h1>
+    <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top_right,#1d2b5f_0%,#0b0e16_44%,#06070a_100%)] p-6 shadow-[0_22px_64px_-30px_rgba(0,0,0,0.9)]">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-300/10 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-44 w-44 rounded-full bg-blue-500/15 blur-3xl" aria-hidden />
+
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/80">Yuki Commerce Admin</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white md:text-4xl">Ecommerce Product Dashboard</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-200/80">
+              Эндээс нэмсэн бүтээгдэхүүнүүд `YukiMobile` аппын бүтээгдэхүүний feed дээр шууд гарна.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {["All", ...PRODUCT_CATEGORIES].map((c) => (
-              <button
-                key={c}
-                className={`rounded px-2 py-1 text-sm ${activeCategory === c ? "bg-[#1400FF] text-white" : "border border-white/10 text-neutral-300 hover:bg-white/5"}`}
-                onClick={() => setActiveCategory(c as typeof activeCategory)}
-                type="button"
-              >
-                {c}
-              </button>
-            ))}
+
+          <div className="rounded-2xl border border-white/15 bg-black/35 px-4 py-3 text-sm text-slate-100 backdrop-blur">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-300/90">Admin Session</p>
+            <p className="mt-1 font-medium">{adminProfile?.phone || "Нэвтрээгүй"}</p>
           </div>
-        </header>
+        </div>
+      </section>
 
-        {isSuperAdmin && <AddProduct onAdded={(p) => setProducts((prev) => [p, ...prev])} />}
+      <section className="mt-6 grid gap-3 sm:grid-cols-3">
+        <MetricCard label="Нийт бараа" value={String(totals.totalProducts)} />
+        <MetricCard label="Ангилалтай бараа" value={`${totals.categoriesWithProducts}/${PRODUCT_CATEGORIES.length}`} />
+        <MetricCard label="Нийт үнэлгээ" value={`${formatMnt(totals.totalValue)} ₮`} />
+      </section>
 
-        {error && <div className="mt-4 rounded border border-rose-800/50 bg-rose-950/30 p-3 text-sm text-rose-200">{error}</div>}
+      {toast ? (
+        <div
+          className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${
+            toast.tone === "success"
+              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+              : toast.tone === "error"
+              ? "border-rose-500/40 bg-rose-500/10 text-rose-100"
+              : "border-sky-500/40 bg-sky-500/10 text-sky-100"
+          }`}
+        >
+          {toast.text}
+        </div>
+      ) : null}
 
-        <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((p) => (
-            <article key={p._id} className="rounded-xl border border-white/10 bg-black/60 p-4">
-              {p.image && (
-                <div className="relative w-full overflow-hidden rounded-lg bg-black/50" style={{ aspectRatio: "3 / 4" }}>
-                  <Image
-                    src={`${UPLOADS_URL}/${p.image}`}
-                    alt={p.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-              )}
+      <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr,2fr]">
+        <article className="rounded-3xl border border-white/10 bg-[#0b1019] p-5 shadow-[0_16px_42px_-28px_rgba(0,0,0,0.85)]">
+          <header className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Бүтээгдэхүүн нэмэх</h2>
+            <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[11px] text-cyan-200">Mobile Sync</span>
+          </header>
+
+          {!isAdminReady ? (
+            <div className="rounded-2xl border border-amber-400/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+              Бүтээгдэхүүн нэмэхийн тулд админ эрхээр нэвтэрнэ үү.
               <div className="mt-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">{p.name}</h3>
-                  <div className="text-white">{formatMNT(p.price)}₮</div>
-                </div>
-                <div className="mt-1 text-xs text-neutral-400">Ангилал: {p.category ?? "Тодорхойгүй"}</div>
-                {p.description && <p className="mt-1 line-clamp-3 text-sm text-neutral-300">{p.description}</p>}
+                <Link href="/auth" className="inline-flex rounded-lg border border-amber-200/40 px-3 py-1.5 text-xs font-semibold hover:bg-amber-100/10">
+                  Admin Login
+                </Link>
               </div>
-              <div className="mt-4 flex items-center justify-between">
-                {isSuperAdmin ? (
-                  <button
-                    onClick={() => deleteProduct(p._id)}
-                    className="rounded-md border border-red-700 px-3 py-1.5 text-sm text-red-400 hover:bg-red-950"
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              <label className="grid gap-1 text-xs text-slate-300">
+                <span>Нэр</span>
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/60"
+                  placeholder="Жишээ: Premium Coffee Beans"
+                />
+              </label>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1 text-xs text-slate-300">
+                  <span>Үнэ (₮)</span>
+                  <input
+                    value={price}
+                    onChange={(event) => setPrice(event.target.value.replace(/[^\d]/g, ""))}
+                    className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/60"
+                    placeholder="35000"
+                  />
+                </label>
+
+                <label className="grid gap-1 text-xs text-slate-300">
+                  <span>Ангилал</span>
+                  <select
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value as ProductCategory)}
+                    className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/60"
                   >
-                    Устгах
-                  </button>
-                ) : <span />}
+                    {PRODUCT_CATEGORIES.map((item) => (
+                      <option key={item} value={item}>
+                        {categoryLabels[item]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label className="grid gap-1 text-xs text-slate-300">
+                <span>Тайлбар</span>
+                <textarea
+                  rows={4}
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/60"
+                  placeholder="Товч тодорхойлолт"
+                />
+              </label>
+
+              <label className="grid gap-1 text-xs text-slate-300">
+                <span>Зураг</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setImageFile(event.target.files?.[0] || null)}
+                  className="rounded-xl border border-dashed border-white/20 bg-black/20 px-3 py-2 text-xs text-slate-200"
+                />
+              </label>
+
+              <div className="flex items-center justify-end gap-2 pt-1">
                 <button
-                  className="rounded-md bg-[#1400FF] px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
-                  onClick={() => setOverlay({ name: p.name, price: `${formatMNT(p.price)}₮` })}
+                  type="button"
+                  onClick={resetForm}
+                  className="rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/5"
                 >
-                  Худалдан авах
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void submitProduct()}
+                  disabled={submitting}
+                  className="rounded-xl bg-cyan-400 px-3 py-2 text-xs font-semibold text-[#021018] disabled:opacity-60"
+                >
+                  {submitting ? "Publishing..." : "Publish Product"}
                 </button>
               </div>
-            </article>
-          ))}
-          {!loading && products.length === 0 && (
-            <div className="col-span-full text-center text-sm text-neutral-400">Одоогоор бараа байхгүй.</div>
+            </div>
           )}
-        </section>
-      </div>
+        </article>
 
-      {overlay && <ShopPaymentOverlay name={overlay.name} price={overlay.price} onClose={() => setOverlay(null)} />}
+        <article className="rounded-3xl border border-white/10 bg-[#0a0d14] p-5 shadow-[0_16px_42px_-28px_rgba(0,0,0,0.85)]">
+          <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Inventory</h2>
+            <div className="flex flex-wrap gap-2">
+              {(["All", ...PRODUCT_CATEGORIES] as const).map((item) => {
+                const active = activeCategory === item;
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setActiveCategory(item)}
+                    className={`rounded-full px-3 py-1.5 text-xs transition ${
+                      active
+                        ? "bg-cyan-300 text-[#031019]"
+                        : "border border-white/10 text-slate-300 hover:bg-white/5"
+                    }`}
+                  >
+                    {item === "All" ? "All" : categoryLabels[item]}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => void refreshProducts()}
+                disabled={loading}
+                className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-60"
+              >
+                {loading ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
+          </header>
+
+          {filteredProducts.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-7 text-center text-sm text-slate-400">
+              Энэ ангилалд бүтээгдэхүүн алга байна.
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredProducts.map((product) => {
+                const imageSrc = product.image ? `${UPLOADS_URL}/${encodeURIComponent(product.image)}` : null;
+                return (
+                  <article key={product._id} className="overflow-hidden rounded-2xl border border-white/10 bg-black/35">
+                    <Link href={`/shop/${product._id}`} className="block">
+                      <div className="relative aspect-[4/5] bg-[#07090f]">
+                        {imageSrc ? (
+                          <Image src={imageSrc} alt={product.name} fill className="object-cover" unoptimized />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.18em] text-slate-500">
+                            No Image
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+
+                    <div className="p-3">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">{categoryLabels[product.category]}</p>
+                      <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-white">{product.name}</h3>
+                      <p className="mt-2 text-sm font-semibold text-slate-100">{formatMnt(product.price)} ₮</p>
+                      {product.description ? (
+                        <p className="mt-2 line-clamp-2 text-xs text-slate-400">{product.description}</p>
+                      ) : null}
+
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <Link
+                          href={`/shop/${product._id}`}
+                          className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-slate-300 hover:bg-white/5"
+                        >
+                          Detail
+                        </Link>
+                        {isAdminReady ? (
+                          <button
+                            type="button"
+                            onClick={() => void removeProduct(product._id)}
+                            className="rounded-lg border border-rose-500/50 bg-rose-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-rose-200 hover:bg-rose-500/20"
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </article>
+      </section>
     </main>
   );
 }
 
-function AddProduct({ onAdded }: { onAdded: (p: Product) => void }) {
-  const { token } = useAuthContext();
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [desc, setDesc] = useState("");
-  const [category, setCategory] = useState<(typeof PRODUCT_CATEGORIES)[number] | "">("");
-  const [image, setImage] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const submit = async () => {
-    if (!token || !name.trim() || !price.trim() || !category) return;
-    setBusy(true);
-    try {
-      const fd = new FormData();
-      fd.set("name", name);
-      fd.set("price", price);
-      fd.set("category", category);
-      if (desc.trim()) fd.set("description", desc);
-      if (image) fd.set("image", image);
-      const res = await fetch(`${BASE_URL}/api/products`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-      onAdded(data?.product as Product);
-      setName(""); setPrice(""); setDesc(""); setCategory(""); setImage(null);
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Алдаа гарлаа");
-    } finally {
-      setBusy(false);
-    }
-  };
-
+function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <section className="rounded-xl border border-white/10 bg-black/60 p-4">
-      <h2 className="mb-2 text-sm font-semibold">Бараа нэмэх (суперадмин)</h2>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <input className="rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]" placeholder="Нэр" value={name} onChange={(e) => setName(e.target.value)} />
-        <input className="rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]" placeholder="Үнэ (₮)" value={price} onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ""))} />
-        <div className="sm:col-span-2 flex gap-2 items-center">
-          <label className="text-sm text-neutral-300 shrink-0" htmlFor="category">Ангилал:</label>
-          <select
-            id="category"
-            className="w-full rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]"
-            value={category}
-            onChange={(e) => setCategory((e.target.value || "") as (typeof PRODUCT_CATEGORIES)[number] | "")}
-          >
-            <option value="" disabled>Сонгох</option>
-            {PRODUCT_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-        <input className="sm:col-span-2 rounded border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none focus:border-[#1400FF]" placeholder="Тайлбар (сонголтоор)" value={desc} onChange={(e) => setDesc(e.target.value)} />
-        <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} className="text-sm text-neutral-300" />
-        <div className="sm:col-span-2 flex items-center justify-end gap-2">
-          <button className="rounded border border-white/10 px-3 py-1.5 text-sm" onClick={() => { setName(""); setPrice(""); setDesc(""); setCategory(""); setImage(null); }} type="button">Цэвэрлэх</button>
-          <button className="rounded bg-[#1400FF] px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50" disabled={busy || !name.trim() || !price.trim() || !category} onClick={submit} type="button">Нэмэх</button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ShopPaymentOverlay({ name, price, onClose }: { name: string; price: string; onClose: () => void }) {
-  const [bankKey, setBankKey] = useState<"khan" | "golomt">("khan");
-  const accountHolder = "Baynbileg Dambadarjaa";
-  const khan = { name: "Хаан банк", fullAccount: "MN720005005926153085" };
-  const golomt = { name: "Голомт банк", fullAccount: "MN150015003005127815" };
-  const bank = bankKey === "khan" ? khan.name : golomt.name;
-  const accountNo = bankKey === "khan" ? khan.fullAccount : golomt.fullAccount;
-
-  const copy = async (text: string) => {
-    try { await navigator.clipboard.writeText(text); } catch {}
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-3">
-      <div className="w-full max-w-md rounded-xl border border-white/10 bg-black/60 p-5 text-white">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Худалдан авах — {name}</h2>
-        </div>
-        <div className="grid gap-2">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-neutral-300">Банк:</span>
-            <div className="inline-flex rounded-md border border-white/10 p-0.5">
-              <button type="button" className={`rounded-sm px-2 py-1 ${bankKey === "khan" ? "bg-[#1400FF] text-white" : "text-neutral-300"}`} onClick={() => setBankKey("khan")}>Хаан</button>
-              <button type="button" className={`rounded-sm px-2 py-1 ${bankKey === "golomt" ? "bg-[#1400FF] text-white" : "text-neutral-300"}`} onClick={() => setBankKey("golomt")}>Голомт</button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between rounded-md border border-white/10 bg-black/50 px-3 py-2 text-sm">
-            <div className="min-w-0">
-              <div className="text-neutral-300">Данс</div>
-              <div className="truncate font-medium text-white">{bank} — {accountNo}</div>
-              <div className="text-xs text-neutral-400">Эзэмшигч: {accountHolder}</div>
-            </div>
-            <button onClick={() => copy(accountNo)} className="ml-3 inline-flex items-center gap-1 rounded border border-white/10 px-2 py-1 text-xs text-neutral-300 hover:border-white/20">
-              <CopyIcon className="h-3.5 w-3.5" /> Хуулах
-            </button>
-          </div>
-          <div className="rounded-md border border-white/10 bg-black/50 px-3 py-2 text-sm text-neutral-300">
-            Та заавал гүйлгээний утга дээр email эсвэл идэвхтэй ашиглаж байгаа social хаяг оруулаарай.
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-neutral-500">Дүн: {price}</div>
-            <button onClick={onClose} className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-neutral-300 hover:bg-black/50">
-              Төлбөр төлсөн
-            </button>
-          </div>
-          <p className="text-center text-[11px] text-neutral-500">та төлбөрөө төлөөд email хариу ирэхгүй бол <span className="text-neutral-300">94641031</span> дугаарлуу залгаарай</p>
-        </div>
-      </div>
-    </div>
+    <article className="rounded-2xl border border-white/10 bg-[#0d111a] px-4 py-4">
+      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+    </article>
   );
 }

@@ -7,7 +7,7 @@ type IconProps = { className?: string };
 type Tab = {
   href: string;
   label: string;
-  icon: (props: IconProps) => JSX.Element;
+  icon: (props: IconProps) => React.ReactElement;
   isActive: (pathname: string) => boolean;
 };
 

@@ -11,4 +11,15 @@ export const ADMIN_TOKEN_STORAGE_KEY = "yuki.auth.adminToken";
 export const ADMIN_PROFILE_STORAGE_KEY = "yuki.auth.adminProfile";
 
 // Marketplace product categories
-export const PRODUCT_CATEGORIES = ["Prompt", "Design", "Clothes"] as const;
+export const PRODUCT_CATEGORIES = [
+  "Хоол",
+  "Хүнс",
+  "Бөөнний түгээлт",
+  "Урьдчилсан захиалга",
+  "Кофе амттан",
+  "Алкохол",
+  "Гэр ахуй & хүүхэд",
+  "Эргэнэтэд үйлдвэрлэв",
+  "Бэлэг & гоо сайхан",
+  "Гадаад захиалга",
+] as const;
