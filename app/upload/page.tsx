@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { buildApiUrl } from "@/lib/api-client";
 
 export default function UploadPage() {
   const [status, setStatus] = React.useState<string>("");
@@ -24,8 +25,7 @@ export default function UploadPage() {
     data.append("file", input.files[0]);
 
     try {
-      // Use Next.js rewrite proxy to backend to avoid CORS/env issues
-      const res = await fetch(`/api-proxy/upload`, { method: "POST", body: data });
+      const res = await fetch(buildApiUrl("/api/upload"), { method: "POST", body: data });
       const json = await res.json();
       if (!res.ok || !json) {
         setStatus(`Upload failed (${res.status})`);

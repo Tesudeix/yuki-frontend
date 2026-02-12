@@ -1,5 +1,5 @@
 import { buildApiUrl } from "@/lib/api-client";
-import { PRODUCT_CATEGORIES } from "@/lib/constants";
+import { ADMIN_TOKEN_STORAGE_KEY, PRODUCT_CATEGORIES } from "@/lib/constants";
 
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 
@@ -73,6 +73,23 @@ const readJson = async (response: Response): Promise<unknown> => {
   }
 };
 
+const getAdminAuthToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  const value = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
+  if (typeof value !== "string") return null;
+  const token = value.trim();
+  return token ? token : null;
+};
+
+const withAdminAuthHeader = (headers: Record<string, string> = {}): Record<string, string> => {
+  const token = getAdminAuthToken();
+  if (!token) return headers;
+  return {
+    ...headers,
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 const extractFilenameFromDownloadUrl = (value: string): string => {
   try {
     const parsed = new URL(value);
@@ -87,8 +104,9 @@ const uploadProductImage = async (file: File): Promise<string> => {
   const form = new FormData();
   form.set("file", file);
 
-  const response = await fetch(buildApiUrl("/upload"), {
+  const response = await fetch(buildApiUrl("/api/upload"), {
     method: "POST",
+    headers: withAdminAuthHeader(),
     body: form,
   });
   const payload = await readJson(response);
@@ -154,9 +172,9 @@ export const createShopProduct = async (input: CreateProductInput): Promise<Shop
   const image = input.image ? await uploadProductImage(input.image) : undefined;
   const response = await fetch(buildApiUrl("/api/products"), {
     method: "POST",
-    headers: {
+    headers: withAdminAuthHeader({
       "Content-Type": "application/json",
-    },
+    }),
     body: JSON.stringify({
       name: input.name.trim(),
       price: Math.round(input.price),
@@ -182,6 +200,7 @@ export const createShopProduct = async (input: CreateProductInput): Promise<Shop
 export const deleteShopProduct = async (id: string): Promise<void> => {
   const response = await fetch(buildApiUrl(`/api/products/${id}`), {
     method: "DELETE",
+    headers: withAdminAuthHeader(),
   });
 
   if (response.ok) return;
