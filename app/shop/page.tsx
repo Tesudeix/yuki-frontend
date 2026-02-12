@@ -69,6 +69,10 @@ export default function ShopPage() {
       setMessage("Name and price are required.");
       return;
     }
+    if (imageFile && imageFile.size > 8 * 1024 * 1024) {
+      setMessage("Image is too large. Max 8MB.");
+      return;
+    }
 
     setSubmitting(true);
     setMessage("");

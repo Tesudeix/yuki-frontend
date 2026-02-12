@@ -73,6 +73,43 @@ const readJson = async (response: Response): Promise<unknown> => {
   }
 };
 
+const extractFilenameFromDownloadUrl = (value: string): string => {
+  try {
+    const parsed = new URL(value);
+    const last = parsed.pathname.split("/").filter(Boolean).pop() || "";
+    return decodeURIComponent(last);
+  } catch {
+    return "";
+  }
+};
+
+const uploadProductImage = async (file: File): Promise<string> => {
+  const form = new FormData();
+  form.set("file", file);
+
+  const response = await fetch(buildApiUrl("/upload"), {
+    method: "POST",
+    body: form,
+  });
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    throw new Error(toErrorMessage(payload, `Failed to upload image (${response.status})`));
+  }
+
+  const downloadUrl =
+    typeof (payload as { downloadUrl?: unknown } | null)?.downloadUrl === "string"
+      ? ((payload as { downloadUrl: string }).downloadUrl)
+      : "";
+
+  const filename = extractFilenameFromDownloadUrl(downloadUrl);
+  if (!filename) {
+    throw new Error("Image upload response is invalid");
+  }
+
+  return filename;
+};
+
 export const listShopProducts = async (category?: ProductCategory): Promise<ShopProduct[]> => {
   const url = new URL(buildApiUrl("/api/products"));
   if (category) {
@@ -114,20 +151,19 @@ export const getShopProduct = async (id: string): Promise<ShopProduct> => {
 };
 
 export const createShopProduct = async (input: CreateProductInput): Promise<ShopProduct> => {
-  const form = new FormData();
-  form.set("name", input.name.trim());
-  form.set("price", String(Math.round(input.price)));
-  form.set("category", input.category);
-  if (input.description?.trim()) {
-    form.set("description", input.description.trim());
-  }
-  if (input.image) {
-    form.set("image", input.image);
-  }
-
+  const image = input.image ? await uploadProductImage(input.image) : undefined;
   const response = await fetch(buildApiUrl("/api/products"), {
     method: "POST",
-    body: form,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: input.name.trim(),
+      price: Math.round(input.price),
+      category: input.category,
+      description: input.description?.trim() || undefined,
+      image,
+    }),
   });
   const payload = await readJson(response);
 
