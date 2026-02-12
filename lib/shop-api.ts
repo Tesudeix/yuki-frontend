@@ -113,7 +113,7 @@ export const getShopProduct = async (id: string): Promise<ShopProduct> => {
   return parsed;
 };
 
-export const createShopProduct = async (token: string, input: CreateProductInput): Promise<ShopProduct> => {
+export const createShopProduct = async (input: CreateProductInput): Promise<ShopProduct> => {
   const form = new FormData();
   form.set("name", input.name.trim());
   form.set("price", String(Math.round(input.price)));
@@ -127,9 +127,6 @@ export const createShopProduct = async (token: string, input: CreateProductInput
 
   const response = await fetch(buildApiUrl("/api/products"), {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: form,
   });
   const payload = await readJson(response);
@@ -146,12 +143,9 @@ export const createShopProduct = async (token: string, input: CreateProductInput
   return parsed;
 };
 
-export const deleteShopProduct = async (token: string, id: string): Promise<void> => {
+export const deleteShopProduct = async (id: string): Promise<void> => {
   const response = await fetch(buildApiUrl(`/api/products/${id}`), {
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   if (response.ok) return;

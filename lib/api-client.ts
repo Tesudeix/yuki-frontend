@@ -24,11 +24,41 @@ export const getApiBase = () => resolveBaseUrl();
 
 const normaliseEndpoint = (endpoint: string) => (endpoint.startsWith("/") ? endpoint : `/${endpoint}`);
 
-// Build full request URL. If using proxy mode, prefix with /api-proxy which is rewired in next.config.ts
+const buildDirectApiUrl = (base: string, endpoint: string) => {
+  const cleanBase = base.replace(/\/$/, "");
+  const ep = normaliseEndpoint(endpoint);
+
+  // Base points to backend API root: https://host/api
+  if (cleanBase.endsWith("/api")) {
+    if (ep.startsWith("/api/")) return `${cleanBase}${ep.slice(4)}`; // avoid /api/api/*
+    if (ep.startsWith("/admin/") || ep.startsWith("/users/")) return `${cleanBase}${ep}`;
+    if (ep === "/upload" || ep.startsWith("/files/")) {
+      return `${cleanBase.slice(0, -4)}${ep}`; // /api -> root for upload/files
+    }
+    return `${cleanBase}${ep}`;
+  }
+
+  // Base points to backend proxy root: https://host/api-proxy
+  if (cleanBase.endsWith("/api-proxy")) {
+    if (ep.startsWith("/admin/") || ep.startsWith("/users/")) return `${cleanBase}/api${ep}`;
+    return `${cleanBase}${ep}`;
+  }
+
+  // Base is origin/domain: https://host
+  return `${cleanBase}${ep}`;
+};
+
+// Build full request URL.
+// - No explicit NEXT_PUBLIC_API_URL: use same-origin endpoints and rely on Next rewrites.
+// - Explicit NEXT_PUBLIC_API_URL: normalize for /api, /api-proxy, or origin styles.
 export const buildApiUrl = (endpoint: string) => {
   const base = resolveBaseUrl();
-  const ep = normaliseEndpoint(endpoint);
-  return `${base}${USING_PROXY ? "/api-proxy" : ""}${ep}`;
+
+  if (USING_PROXY) {
+    return `${base}${normaliseEndpoint(endpoint)}`;
+  }
+
+  return buildDirectApiUrl(base, endpoint);
 };
 
 export const isSuccess = <T,>(payload: ApiResponse<T>): payload is ApiSuccess<T> => payload.success;

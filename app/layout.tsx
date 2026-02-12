@@ -13,8 +13,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Yuki Admin Ecommerce",
-  description: "Admin dashboard for managing products synced to YukiMobile",
+  title: "Yuki Product Admin",
+  description: "Minimal admin dashboard for managing products synced to YukiMobile",
 };
 
 export default function RootLayout({
@@ -24,10 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="mn" className={spaceGrotesk.variable}>
-      <body className="min-h-screen bg-[#05070d] font-sans text-neutral-100 antialiased">
+      <body className="min-h-screen bg-white text-black antialiased">
         <Providers>
           <SiteHeader />
-          <div className="pb-[calc(70px+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
+          <div className="pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
           <MobileBottomNav />
         </Providers>
       </body>
