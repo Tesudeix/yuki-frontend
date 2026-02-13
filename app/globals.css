@@ -11,6 +11,8 @@
   --brand-glow: rgba(20, 0, 255, 0.35);
   --border: #1e1e2a;
   --muted: #9aa0b4;
+  --font-space: "Space Grotesk", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 @theme inline {

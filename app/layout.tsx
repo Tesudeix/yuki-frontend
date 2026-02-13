@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
 
 import "./globals.css";
 import SiteHeader from "@/app/components/SiteHeader";
 import MobileBottomNav from "@/app/components/MobileBottomNav";
 import { Providers } from "./providers";
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space",
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Yuki Product Admin",
@@ -23,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="mn" className={spaceGrotesk.variable}>
+    <html lang="mn">
       <body className="min-h-screen bg-white text-black antialiased">
         <Providers>
           <SiteHeader />

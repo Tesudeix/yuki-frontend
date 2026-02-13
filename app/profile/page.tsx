@@ -90,7 +90,13 @@ export default function ProfilePage() {
       // 1) Upload file to backend file mirror
       const form = new FormData();
       form.append("file", file);
-      const upRes = await fetch(`${BASE_URL}/api/upload`, { method: "POST", body: form });
+      const uploadHeaders: Record<string, string> = {};
+      if (token) uploadHeaders.Authorization = `Bearer ${token}`;
+      const upRes = await fetch(`${BASE_URL}/api/upload`, {
+        method: "POST",
+        headers: uploadHeaders,
+        body: form,
+      });
       const upJson = await upRes.json();
       const downloadUrl = upJson?.downloadUrl as string | undefined;
       if (!downloadUrl) throw new Error("Upload failed");

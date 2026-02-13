@@ -174,7 +174,7 @@ export default function ClassroomPage() {
     if (!isSuperAdmin || !token || !editing || !canSave) return;
     try {
       const res = await fetch(`${BASE_URL}/api/lessons/${editing._id}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ url: newUrl, title: newTitle, description: newDesc, folder: newFolder }),
       });

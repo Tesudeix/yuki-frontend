@@ -2,6 +2,7 @@
 
 import React from "react";
 import { buildApiUrl } from "@/lib/api-client";
+import { ADMIN_TOKEN_STORAGE_KEY, TOKEN_STORAGE_KEY } from "@/lib/constants";
 
 export default function UploadPage() {
   const [status, setStatus] = React.useState<string>("");
@@ -25,7 +26,15 @@ export default function UploadPage() {
     data.append("file", input.files[0]);
 
     try {
-      const res = await fetch(buildApiUrl("/api/upload"), { method: "POST", body: data });
+      const authToken =
+        (typeof window !== "undefined" && localStorage.getItem(TOKEN_STORAGE_KEY)) ||
+        (typeof window !== "undefined" && localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY)) ||
+        "";
+      const headers: Record<string, string> = {};
+      if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
+      }
+      const res = await fetch(buildApiUrl("/api/upload"), { method: "POST", headers, body: data });
       const json = await res.json();
       if (!res.ok || !json) {
         setStatus(`Upload failed (${res.status})`);
